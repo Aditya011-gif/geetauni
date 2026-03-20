@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -62,7 +63,12 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
   final List<String> _documentImages = [];
   final ImagePicker _picker = ImagePicker();
 
-  final List<String> _landTypes = ['Agricultural', 'Residential', 'Commercial', 'Industrial'];
+  final List<String> _landTypes = [
+    'Agricultural',
+    'Residential',
+    'Commercial',
+    'Industrial',
+  ];
   final List<String> _ownershipTypes = ['Freehold', 'Leasehold', 'Joint'];
   final List<String> _valuationMethods = ['Market', 'Income', 'Cost'];
 
@@ -135,7 +141,9 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 2),
               height: 4,
               decoration: BoxDecoration(
-                color: index <= _currentStep ? AppTheme.primaryGreen : Colors.grey[300],
+                color: index <= _currentStep
+                    ? AppTheme.primaryGreen
+                    : Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -158,14 +166,15 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             _buildTextField(
               controller: _addressController,
               label: 'Property Address',
               hint: 'Enter complete property address',
-              validator: (value) => value?.isEmpty == true ? 'Address is required' : null,
+              validator: (value) =>
+                  value?.isEmpty == true ? 'Address is required' : null,
             ),
-            
+
             Row(
               children: [
                 Expanded(
@@ -173,7 +182,9 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                     controller: _surveyNumberController,
                     label: 'Survey Number',
                     hint: 'Survey No.',
-                    validator: (value) => value?.isEmpty == true ? 'Survey number is required' : null,
+                    validator: (value) => value?.isEmpty == true
+                        ? 'Survey number is required'
+                        : null,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -186,7 +197,7 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                 ),
               ],
             ),
-            
+
             Row(
               children: [
                 Expanded(
@@ -194,7 +205,8 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                     controller: _villageController,
                     label: 'Village',
                     hint: 'Village name',
-                    validator: (value) => value?.isEmpty == true ? 'Village is required' : null,
+                    validator: (value) =>
+                        value?.isEmpty == true ? 'Village is required' : null,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -203,12 +215,13 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                     controller: _districtController,
                     label: 'District',
                     hint: 'District name',
-                    validator: (value) => value?.isEmpty == true ? 'District is required' : null,
+                    validator: (value) =>
+                        value?.isEmpty == true ? 'District is required' : null,
                   ),
                 ),
               ],
             ),
-            
+
             Row(
               children: [
                 Expanded(
@@ -216,7 +229,8 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                     controller: _stateController,
                     label: 'State',
                     hint: 'State name',
-                    validator: (value) => value?.isEmpty == true ? 'State is required' : null,
+                    validator: (value) =>
+                        value?.isEmpty == true ? 'State is required' : null,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -226,12 +240,13 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                     label: 'Pincode',
                     hint: 'PIN Code',
                     keyboardType: TextInputType.number,
-                    validator: (value) => value?.isEmpty == true ? 'Pincode is required' : null,
+                    validator: (value) =>
+                        value?.isEmpty == true ? 'Pincode is required' : null,
                   ),
                 ),
               ],
             ),
-            
+
             Row(
               children: [
                 Expanded(
@@ -240,7 +255,8 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                     label: 'Area (Acres)',
                     hint: 'Land area in acres',
                     keyboardType: TextInputType.number,
-                    validator: (value) => value?.isEmpty == true ? 'Area is required' : null,
+                    validator: (value) =>
+                        value?.isEmpty == true ? 'Area is required' : null,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -249,43 +265,44 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                     label: 'Land Type',
                     value: _selectedLandType,
                     items: _landTypes,
-                    onChanged: (value) => setState(() => _selectedLandType = value!),
+                    onChanged: (value) =>
+                        setState(() => _selectedLandType = value!),
                   ),
                 ),
               ],
             ),
-            
+
             _buildTextField(
               controller: _soilTypeController,
               label: 'Soil Type',
               hint: 'Type of soil (e.g., Clay, Sandy, Loamy)',
             ),
-            
+
             _buildTextField(
               controller: _waterSourceController,
               label: 'Water Source',
               hint: 'Primary water source (e.g., Borewell, Canal, River)',
             ),
-            
+
             _buildTextField(
               controller: _landUseController,
               label: 'Current Land Use',
               hint: 'How the land is currently being used',
             ),
-            
+
             _buildTextField(
               controller: _accessRoadController,
               label: 'Access Road',
               hint: 'Type of road access (e.g., Paved, Gravel, Dirt)',
             ),
-            
+
             _buildTextField(
               controller: _boundariesController,
               label: 'Boundaries',
               hint: 'Describe property boundaries (comma separated)',
               maxLines: 3,
             ),
-            
+
             Row(
               children: [
                 Expanded(
@@ -307,7 +324,7 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                 ),
               ],
             ),
-            
+
             SwitchListTile(
               title: const Text('Has Irrigation'),
               subtitle: const Text('Does the land have irrigation facilities?'),
@@ -332,41 +349,45 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _registrationNumberController,
             label: 'Registration Number',
             hint: 'Property registration number',
-            validator: (value) => value?.isEmpty == true ? 'Registration number is required' : null,
+            validator: (value) => value?.isEmpty == true
+                ? 'Registration number is required'
+                : null,
           ),
-          
+
           _buildDateField(
             label: 'Registration Date',
             selectedDate: _registrationDate,
             onDateSelected: (date) => setState(() => _registrationDate = date),
           ),
-          
+
           _buildTextField(
             controller: _registrarOfficeController,
             label: 'Registrar Office',
             hint: 'Name of registrar office',
-            validator: (value) => value?.isEmpty == true ? 'Registrar office is required' : null,
+            validator: (value) =>
+                value?.isEmpty == true ? 'Registrar office is required' : null,
           ),
-          
+
           _buildDropdown(
             label: 'Ownership Type',
             value: _selectedOwnershipType,
             items: _ownershipTypes,
-            onChanged: (value) => setState(() => _selectedOwnershipType = value!),
+            onChanged: (value) =>
+                setState(() => _selectedOwnershipType = value!),
           ),
-          
+
           _buildTextField(
             controller: _previousOwnersController,
             label: 'Previous Owners',
             hint: 'List of previous owners (comma separated)',
             maxLines: 3,
           ),
-          
+
           SwitchListTile(
             title: const Text('Has Legal Disputes'),
             subtitle: const Text('Are there any ongoing legal disputes?'),
@@ -374,7 +395,7 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
             onChanged: (value) => setState(() => _hasLegalDisputes = value),
             activeThumbColor: AppTheme.primaryGreen,
           ),
-          
+
           SwitchListTile(
             title: const Text('Is Encumbered'),
             subtitle: const Text('Is the property under any encumbrance?'),
@@ -398,42 +419,46 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           _buildTextField(
             controller: _currentValueController,
             label: 'Current Market Value (₹)',
             hint: 'Current market value in rupees',
             keyboardType: TextInputType.number,
-            validator: (value) => value?.isEmpty == true ? 'Current value is required' : null,
+            validator: (value) =>
+                value?.isEmpty == true ? 'Current value is required' : null,
           ),
-          
+
           _buildDateField(
             label: 'Valuation Date',
             selectedDate: _valuationDate,
             onDateSelected: (date) => setState(() => _valuationDate = date),
           ),
-          
+
           _buildDropdown(
             label: 'Valuation Method',
             value: _selectedValuationMethod,
             items: _valuationMethods,
-            onChanged: (value) => setState(() => _selectedValuationMethod = value!),
+            onChanged: (value) =>
+                setState(() => _selectedValuationMethod = value!),
           ),
-          
+
           _buildTextField(
             controller: _valuedByController,
             label: 'Valued By',
             hint: 'Who conducted the valuation',
-            validator: (value) => value?.isEmpty == true ? 'Valuator information is required' : null,
+            validator: (value) => value?.isEmpty == true
+                ? 'Valuator information is required'
+                : null,
           ),
-          
+
           _buildTextField(
             controller: _marketRateController,
             label: 'Market Rate per Acre (₹)',
             hint: 'Current market rate per acre',
             keyboardType: TextInputType.number,
           ),
-          
+
           _buildTextField(
             controller: _guidanceValueController,
             label: 'Government Guidance Value (₹)',
@@ -456,19 +481,19 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           const Text(
             'Please upload the following documents:',
             style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-          
+
           const Text(
             '• Title Deed\n• Survey Settlement\n• Encumbrance Certificate\n• Property Photos\n• Valuation Certificate',
             style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
           const SizedBox(height: 24),
-          
+
           ElevatedButton.icon(
             onPressed: _pickDocumentImages,
             icon: const Icon(Icons.add_photo_alternate),
@@ -479,16 +504,16 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           if (_documentImages.isNotEmpty) ...[
             const Text(
               'Selected Documents:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
-            
+
             GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -508,12 +533,19 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                       ),
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(8),
-                        child: Image.file(
-                          File(_documentImages[index]),
-                          fit: BoxFit.cover,
-                          width: double.infinity,
-                          height: double.infinity,
-                        ),
+                        child: kIsWeb
+                            ? Image.network(
+                                _documentImages[index],
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              )
+                            : Image.file(
+                                File(_documentImages[index]),
+                                fit: BoxFit.cover,
+                                width: double.infinity,
+                                height: double.infinity,
+                              ),
                       ),
                     ),
                     Positioned(
@@ -556,7 +588,7 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           _buildReviewSection('Land Details', [
             'Address: ${_addressController.text}',
             'Survey Number: ${_surveyNumberController.text}',
@@ -566,41 +598,39 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
             'District: ${_districtController.text}',
             'State: ${_stateController.text}',
           ]),
-          
+
           _buildReviewSection('Legal Information', [
             'Registration Number: ${_registrationNumberController.text}',
             'Registration Date: ${_registrationDate.toLocal().toString().split(' ')[0]}',
             'Ownership Type: $_selectedOwnershipType',
             'Registrar Office: ${_registrarOfficeController.text}',
           ]),
-          
+
           _buildReviewSection('Valuation', [
             'Current Value: ₹${_currentValueController.text}',
             'Valuation Method: $_selectedValuationMethod',
             'Valued By: ${_valuedByController.text}',
             'Market Rate: ₹${_marketRateController.text}/acre',
           ]),
-          
+
           _buildReviewSection('Documents', [
             'Total Documents: ${_documentImages.length}',
           ]),
-          
+
           const SizedBox(height: 24),
-          
+
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.primaryGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+              ),
             ),
             child: const Column(
               children: [
-                Icon(
-                  Icons.security,
-                  color: AppTheme.primaryGreen,
-                  size: 32,
-                ),
+                Icon(Icons.security, color: AppTheme.primaryGreen, size: 32),
                 SizedBox(height: 8),
                 Text(
                   'NFT Minting',
@@ -614,10 +644,7 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
                 Text(
                   'Your land will be tokenized as an NFT on the blockchain, providing immutable proof of ownership and enabling it to be used as collateral for loans.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppTheme.darkGreen,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: AppTheme.darkGreen, fontSize: 14),
                 ),
               ],
             ),
@@ -640,19 +667,15 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          ...items.map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              item,
-              style: const TextStyle(fontSize: 14),
+          ...items.map(
+            (item) => Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Text(item, style: const TextStyle(fontSize: 14)),
             ),
-          )),
+          ),
         ],
       ),
     );
@@ -676,9 +699,7 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.primaryGreen),
@@ -701,19 +722,14 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
         onChanged: onChanged,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.primaryGreen),
           ),
         ),
         items: items.map((item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
-          );
+          return DropdownMenuItem<String>(value: item, child: Text(item));
         }).toList(),
       ),
     );
@@ -741,9 +757,7 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: label,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppTheme.primaryGreen),
@@ -827,10 +841,10 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
         return _formKey.currentState?.validate() ?? false;
       case 1:
         return _registrationNumberController.text.isNotEmpty &&
-               _registrarOfficeController.text.isNotEmpty;
+            _registrarOfficeController.text.isNotEmpty;
       case 2:
         return _currentValueController.text.isNotEmpty &&
-               _valuedByController.text.isNotEmpty;
+            _valuedByController.text.isNotEmpty;
       case 3:
         if (_documentImages.isEmpty) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -888,7 +902,10 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
         landType: _selectedLandType,
         soilType: _soilTypeController.text,
         waterSource: _waterSourceController.text,
-        boundaries: _boundariesController.text.split(',').map((e) => e.trim()).toList(),
+        boundaries: _boundariesController.text
+            .split(',')
+            .map((e) => e.trim())
+            .toList(),
         coordinates: GeoLocation(
           latitude: double.tryParse(_latitudeController.text) ?? 0.0,
           longitude: double.tryParse(_longitudeController.text) ?? 0.0,
@@ -904,7 +921,10 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
         registrationDate: _registrationDate,
         registrarOffice: _registrarOfficeController.text,
         ownershipType: _selectedOwnershipType,
-        previousOwners: _previousOwnersController.text.split(',').map((e) => e.trim()).toList(),
+        previousOwners: _previousOwnersController.text
+            .split(',')
+            .map((e) => e.trim())
+            .toList(),
         titleDeedHash: '', // Will be set by NFT service
         surveySettlementHash: '', // Will be set by NFT service
         encumbranceCertificateHash: '', // Will be set by NFT service
@@ -930,7 +950,8 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
       final result = await NFTService.mintLandNFT(
         ownerFirebaseUid: user.id,
         ownerName: user.name,
-        ownerAddress: user.walletAddress ?? '0x${user.name.hashCode.toRadixString(16)}',
+        ownerAddress:
+            user.walletAddress ?? '0x${user.name.hashCode.toRadixString(16)}',
         landDetails: landDetails,
         legalDocuments: legalDocuments,
         valuation: valuation,
@@ -942,7 +963,9 @@ class _MintLandNFTScreenState extends State<MintLandNFTScreen> {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Land NFT minted successfully! Token ID: ${result['tokenId']}'),
+              content: Text(
+                'Land NFT minted successfully! Token ID: ${result['tokenId']}',
+              ),
               backgroundColor: AppTheme.primaryGreen,
               duration: const Duration(seconds: 5),
             ),

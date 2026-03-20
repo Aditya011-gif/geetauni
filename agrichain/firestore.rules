@@ -1,100 +1,156 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Allow admin user full access for data management scripts
-    match /{document=**} {
-      allow read, write: if request.auth != null && 
-        request.auth.token.email == 'admin@agrichain.com';
+    function isSignedIn() {
+      return request.auth != null;
     }
-    
-    // Allow authenticated users to read and write user documents
-    // Users can access documents where firebaseUid matches their auth.uid or they are admin
+
+    function isAdmin() {
+      return isSignedIn() && (request.auth.token.admin == true || request.auth.token.email == 'admin@agrichain.com');
+    }
+
+    function ownerMatchesResource() {
+      return resource != null && resource.data.firebaseUid == request.auth.uid;
+    }
+
+    function ownerMatchesRequest() {
+      return request.resource.data.firebaseUid == request.auth.uid;
+    }
+
+    // Users: allow public reads for signup/signin checks, restrict writes to owners/admins
     match /users/{userId} {
-      allow read, write: if request.auth != null && 
-        (resource == null || resource.data.firebaseUid == request.auth.uid || 
-         request.auth.token.email == 'admin@agrichain.com');
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow delete: if isAdmin() || request.auth.uid == userId;
     }
-    
-    // Allow unauthenticated email-based queries for signup/signin validation
-    // This is necessary for checking if user exists during authentication flows
-    match /users/{userId} {
-      allow read: if true; // Allow reading for email existence checks
-      allow list: if true; // Allow querying by email during auth flows
-    }
-    
-    // Allow authenticated users to read and write their own profile documents
+
+    // Profiles: owner or admin access
     match /profiles/{userId} {
-      allow read, write: if request.auth != null && 
-        (resource == null || resource.data.firebaseUid == request.auth.uid ||
-         request.auth.token.email == 'admin@agrichain.com');
+      allow get, list: if isSignedIn() && (request.auth.uid == userId || isAdmin());
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && request.auth.uid == userId && request.resource.data.firebaseUid == resource.data.firebaseUid;
+      allow delete: if isAdmin() || request.auth.uid == userId;
     }
-    
-    // Allow authenticated users to read and write profile_data documents
+
+    // Profile data: owner or admin access
     match /profile_data/{profileId} {
-      allow read, write: if request.auth != null && 
-        (resource == null || resource.data.firebaseUid == request.auth.uid ||
-         request.auth.token.email == 'admin@agrichain.com');
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn() && ownerMatchesRequest();
+      allow update: if isSignedIn() && ownerMatchesResource() && request.resource.data.firebaseUid == resource.data.firebaseUid;
+      allow delete: if isAdmin() || ownerMatchesResource();
     }
-    
-    // Allow authenticated users to query profile_data by userId
-    match /profile_data/{profileId} {
-      allow read: if request.auth != null;
-      allow list: if request.auth != null;
-    }
-    
-    // Allow authenticated users to read and write crop documents
+
+    // Crops: public reads (marketplace), writes by owner/admin
     match /crops/{cropId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && 
-        (resource == null || resource.data.firebaseUid == request.auth.uid ||
-         request.auth.token.email == 'admin@agrichain.com');
-      allow list: if request.auth != null;
+      allow get, list: if true;
+      allow create: if isSignedIn() && request.resource.data.farmerId == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.farmerId == request.auth.uid);
     }
-    
-    // Allow authenticated users to read and write loan documents
-    match /loans/{loanId} {
-      allow read, write: if request.auth != null;
+
+    // Orders: reads by buyer or seller, writes by buyer/admin
+    match /orders/{orderId} {
+      allow get, list: if isSignedIn() && (
+        resource == null || 
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid || 
+        resource.data.buyerFirebaseUid == request.auth.uid || 
+        resource.data.sellerFirebaseUid == request.auth.uid ||
+        isAdmin()
+      );
+      allow create: if isSignedIn() && (
+        request.resource.data.buyerId == request.auth.uid ||
+        request.resource.data.buyerFirebaseUid == request.auth.uid
+      );
+      allow update: if isAdmin() || (isSignedIn() && (
+        resource.data.buyerId == request.auth.uid || 
+        resource.data.sellerId == request.auth.uid ||
+        resource.data.buyerFirebaseUid == request.auth.uid || 
+        resource.data.sellerFirebaseUid == request.auth.uid
+      ));
+      allow delete: if isAdmin();
     }
-    
-    // Allow authenticated users to read and write loan request documents
+
+    // Contracts: owner can read their own contracts
+    match /contracts/{contractId} {
+      allow get, list: if isSignedIn() && (
+        resource == null || 
+        resource.data.userFirebaseUid == request.auth.uid || 
+        isAdmin()
+      );
+      allow create: if isSignedIn() && request.resource.data.userFirebaseUid == request.auth.uid;
+      allow update, delete: if isAdmin() || (isSignedIn() && resource.data.userFirebaseUid == request.auth.uid);
+    }
+
+    // Loan requests: signed-in users
     match /loan_requests/{loanRequestId} {
-      allow read, write: if request.auth != null;
-      allow list: if request.auth != null;
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
-    
-    // Allow authenticated users to read and write loan offer documents
+
+    // Loan offers: signed-in users
     match /loan_offers/{offerId} {
-      allow read, write: if request.auth != null;
-      // Allow unauthenticated writes for mock data initialization
-      allow write: if request.resource.data.description == 'Mock loan offer for testing purposes';
-      allow delete: if resource.data.description == 'Mock loan offer for testing purposes';
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
-    
-    // Allow authenticated users to read and write KYC documents
-    match /kyc_data/{kycId} {
-      allow read, write: if request.auth != null && 
-        (resource == null || resource.data.firebaseUid == request.auth.uid ||
-         request.auth.token.email == 'admin@agrichain.com');
+
+    // Loans: signed-in users
+    match /loans/{loanId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
     }
-    
-    // Allow authenticated users to read and write security logs (for their own data)
+
+    // Transactions: signed-in users
+    match /transactions/{transactionId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
+
+    // Security logs: admin, or owner if firebaseUid matches
     match /security_logs/{logId} {
-      allow read, write: if request.auth != null && 
-        (resource == null || resource.data.firebaseUid == request.auth.uid ||
-         request.auth.token.email == 'admin@agrichain.com');
+      allow create: if isSignedIn();
+      allow get, list: if isAdmin() || (isSignedIn() && ownerMatchesResource());
+      allow update, delete: if isAdmin();
     }
-    
-    // Allow authenticated users to read app configuration
+
+    // Sessions: owner or admin
+    match /sessions/{sessionId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || (isSignedIn() && ownerMatchesResource());
+    }
+
+    // App config: read by signed-in users, write by admin
     match /app_config/{configId} {
-      allow read: if request.auth != null;
-      allow write: if request.auth != null && request.auth.token.email == 'admin@agrichain.com';
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isAdmin();
     }
-    
-    // Allow authenticated users to read and write documents where they are the owner
-    match /{document=**} {
-      allow read, write: if request.auth != null && 
-        (resource == null || resource.data.firebaseUid == request.auth.uid ||
-         request.auth.token.email == 'admin@agrichain.com');
+
+    // KYC data: signed-in users can create/read/update their own
+    match /kyc_data/{kycId} {
+      allow get, list: if isSignedIn();
+      allow create: if isSignedIn();
+      allow update: if isSignedIn();
+      allow delete: if isAdmin();
+    }
+
+    // Ratings: signed-in users
+    match /ratings/{ratingId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
+
+    // Rating stats: signed-in users
+    match /rating_stats/{statId} {
+      allow get, list: if isSignedIn();
+      allow create, update, delete: if isSignedIn();
+    }
+
+    // Auctions: public reads, writes by owner/admin if firebaseUid is present
+    match /auctions/{auctionId} {
+      allow get, list: if true;
+      allow create: if isSignedIn();
+      allow update, delete: if isAdmin() || ownerMatchesResource();
     }
   }
 }

@@ -1,19 +1,22 @@
 import 'dart:convert';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
 import '../models/firestore_models.dart';
 import '../services/profile_service.dart';
+import '../services/database_service.dart';
 import '../providers/app_state.dart';
 import '../theme/app_theme.dart';
 
 class ProfileEditScreen extends StatefulWidget {
   final Map<String, dynamic>? profileData;
 
-  const ProfileEditScreen({
-    super.key,
-    this.profileData,
-  });
+  const ProfileEditScreen({super.key, this.profileData});
 
   @override
   State<ProfileEditScreen> createState() => _ProfileEditScreenState();
@@ -22,7 +25,7 @@ class ProfileEditScreen extends StatefulWidget {
 class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final _formKey = GlobalKey<FormState>();
   final ProfileService _profileService = ProfileService();
-  
+
   // Form controllers
   final TextEditingController _addressController = TextEditingController();
   final TextEditingController _cityController = TextEditingController();
@@ -32,58 +35,134 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   final TextEditingController _farmSizeController = TextEditingController();
   final TextEditingController _businessTypeController = TextEditingController();
   final TextEditingController _gstController = TextEditingController();
-  
+
   // State variables
   bool _isLoading = false;
   String? _selectedState;
   List<String> _selectedCrops = [];
   List<String> _selectedServices = [];
-  
+
+  // Signature state
+  XFile? _signatureImage;
+  String? _existingSignatureUrl;
+
   // Static data
   final List<String> _indianStates = [
-    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
-    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal'
+    'Andhra Pradesh',
+    'Arunachal Pradesh',
+    'Assam',
+    'Bihar',
+    'Chhattisgarh',
+    'Goa',
+    'Gujarat',
+    'Haryana',
+    'Himachal Pradesh',
+    'Jharkhand',
+    'Karnataka',
+    'Kerala',
+    'Madhya Pradesh',
+    'Maharashtra',
+    'Manipur',
+    'Meghalaya',
+    'Mizoram',
+    'Nagaland',
+    'Odisha',
+    'Punjab',
+    'Rajasthan',
+    'Sikkim',
+    'Tamil Nadu',
+    'Telangana',
+    'Tripura',
+    'Uttar Pradesh',
+    'Uttarakhand',
+    'West Bengal',
   ];
-  
+
   final List<String> _cropOptions = [
-    'Wheat', 'Rice', 'Maize', 'Barley', 'Sugarcane', 'Cotton', 'Jute',
-    'Tea', 'Coffee', 'Rubber', 'Coconut', 'Groundnut', 'Mustard', 'Sunflower',
-    'Soybean', 'Potato', 'Onion', 'Tomato', 'Chili', 'Turmeric', 'Ginger',
-    'Garlic', 'Banana', 'Mango', 'Apple', 'Orange', 'Grapes', 'Pomegranate'
+    'Wheat',
+    'Rice',
+    'Maize',
+    'Barley',
+    'Sugarcane',
+    'Cotton',
+    'Jute',
+    'Tea',
+    'Coffee',
+    'Rubber',
+    'Coconut',
+    'Groundnut',
+    'Mustard',
+    'Sunflower',
+    'Soybean',
+    'Potato',
+    'Onion',
+    'Tomato',
+    'Chili',
+    'Turmeric',
+    'Ginger',
+    'Garlic',
+    'Banana',
+    'Mango',
+    'Apple',
+    'Orange',
+    'Grapes',
+    'Pomegranate',
   ];
-  
+
   final List<String> _serviceOptions = [
-    'Wholesale Trading', 'Retail Distribution', 'Export Services',
-    'Processing & Packaging', 'Cold Storage', 'Transportation',
-    'Quality Testing', 'Market Analysis', 'Financial Services',
-    'Agricultural Consulting', 'Equipment Rental', 'Seed Supply'
+    'Wholesale Trading',
+    'Retail Distribution',
+    'Export Services',
+    'Processing & Packaging',
+    'Cold Storage',
+    'Transportation',
+    'Quality Testing',
+    'Market Analysis',
+    'Financial Services',
+    'Agricultural Consulting',
+    'Equipment Rental',
+    'Seed Supply',
   ];
 
   @override
   void initState() {
     super.initState();
     _initializeFormData();
+    _loadExistingSignature();
+  }
+
+  void _loadExistingSignature() {
+    final currentUser = Provider.of<AppState>(
+      context,
+      listen: false,
+    ).currentUser;
+    if (currentUser?.signatureUrl != null &&
+        currentUser!.signatureUrl!.isNotEmpty) {
+      setState(() {
+        _existingSignatureUrl = currentUser.signatureUrl;
+      });
+    }
   }
 
   void _initializeFormData() {
     if (widget.profileData != null) {
       final data = widget.profileData!;
-      
+
       _addressController.text = data['address'] ?? '';
       _cityController.text = data['city'] ?? '';
       _pincodeController.text = data['pincode'] ?? '';
       _bioController.text = data['bio'] ?? '';
       _experienceController.text = data['experience']?.toString() ?? '';
       _selectedState = data['state'];
-      
+
       // User type specific data
-        final currentUser = Provider.of<AppState>(context, listen: false).currentUser;
-        if (currentUser?.userType == UserType.farmer) {
+      final currentUser = Provider.of<AppState>(
+        context,
+        listen: false,
+      ).currentUser;
+      if (currentUser?.userType == UserType.farmer) {
         _farmSizeController.text = data['farmSize'] ?? '';
-        
+
         // Parse crops
         if (data['crops'] != null) {
           if (data['crops'] is String) {
@@ -102,7 +181,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
       } else if (currentUser?.userType == UserType.buyer) {
         _businessTypeController.text = data['businessType'] ?? '';
         _gstController.text = data['gstNumber'] ?? '';
-        
+
         // Parse services
         if (data['services'] != null) {
           if (data['services'] is String) {
@@ -174,17 +253,22 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               _buildSectionTitle('Personal Information'),
               const SizedBox(height: 16),
               _buildPersonalInfoSection(),
-              
+
               const SizedBox(height: 24),
               _buildSectionTitle('Location Details'),
               const SizedBox(height: 16),
               _buildLocationSection(),
-              
+
               const SizedBox(height: 24),
               _buildSectionTitle('Professional Information'),
               const SizedBox(height: 16),
               _buildProfessionalSection(),
-              
+
+              const SizedBox(height: 24),
+              _buildSectionTitle('Digital Signature'),
+              const SizedBox(height: 16),
+              _buildSignatureSection(),
+
               const SizedBox(height: 32),
             ],
           ),
@@ -304,10 +388,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
                   prefixIcon: Icon(Icons.map),
                 ),
                 items: _indianStates.map((state) {
-                  return DropdownMenuItem(
-                    value: state,
-                    child: Text(state),
-                  );
+                  return DropdownMenuItem(value: state, child: Text(state));
                 }).toList(),
                 onChanged: (value) {
                   setState(() {
@@ -353,7 +434,10 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
   }
 
   Widget _buildProfessionalSection() {
-    final currentUser = Provider.of<AppState>(context, listen: false).currentUser;
+    final currentUser = Provider.of<AppState>(
+      context,
+      listen: false,
+    ).currentUser;
     if (currentUser?.userType == UserType.farmer) {
       return _buildFarmerSection();
     } else if (currentUser?.userType == UserType.buyer) {
@@ -384,10 +468,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         const SizedBox(height: 16),
         const Text(
           'Crops Grown',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         _buildMultiSelectChips(
@@ -404,10 +485,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             padding: EdgeInsets.only(top: 8),
             child: Text(
               'Please select at least one crop',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.red, fontSize: 12),
             ),
           ),
       ],
@@ -455,7 +533,9 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
               return 'GST number must be 15 characters';
             }
             // Basic GST format validation
-            final gstRegex = RegExp(r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$');
+            final gstRegex = RegExp(
+              r'^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$',
+            );
             if (!gstRegex.hasMatch(value)) {
               return 'Please enter a valid GST number';
             }
@@ -465,10 +545,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
         const SizedBox(height: 16),
         const Text(
           'Services Offered',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
+          style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
         ),
         const SizedBox(height: 8),
         _buildMultiSelectChips(
@@ -485,10 +562,7 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
             padding: EdgeInsets.only(top: 8),
             child: Text(
               'Please select at least one service',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: Colors.red, fontSize: 12),
             ),
           ),
       ],
@@ -524,13 +598,172 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
     );
   }
 
+  Widget _buildSignatureSection() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        border: Border.all(color: Colors.grey[300]!),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Column(
+        children: [
+          if (_signatureImage != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: kIsWeb
+                  ? Image.network(
+                      _signatureImage!.path,
+                      height: 100,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    )
+                  : Image.file(
+                      File(_signatureImage!.path),
+                      height: 100,
+                      width: double.infinity,
+                      fit: BoxFit.contain,
+                    ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(Icons.check_circle, color: Colors.green, size: 16),
+                const SizedBox(width: 4),
+                const Text(
+                  'New signature selected',
+                  style: TextStyle(color: Colors.green, fontSize: 12),
+                ),
+                const SizedBox(width: 12),
+                TextButton(
+                  onPressed: () => setState(() => _signatureImage = null),
+                  child: const Text(
+                    'Remove',
+                    style: TextStyle(color: Colors.red, fontSize: 12),
+                  ),
+                ),
+              ],
+            ),
+          ] else if (_existingSignatureUrl != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: Image.network(
+                _existingSignatureUrl!,
+                height: 100,
+                width: double.infinity,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Container(
+                    height: 100,
+                    color: Colors.grey[200],
+                    child: const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.broken_image,
+                            color: Colors.grey,
+                            size: 32,
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Could not load signature',
+                            style: TextStyle(color: Colors.grey, fontSize: 12),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            const SizedBox(height: 8),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(Icons.check_circle, color: Colors.green, size: 16),
+                SizedBox(width: 4),
+                Text(
+                  'Current signature',
+                  style: TextStyle(color: Colors.green, fontSize: 12),
+                ),
+              ],
+            ),
+          ] else ...[
+            Icon(Icons.draw_outlined, size: 48, color: Colors.grey[400]),
+            const SizedBox(height: 8),
+            Text(
+              'No signature uploaded',
+              style: TextStyle(color: Colors.grey[600], fontSize: 14),
+            ),
+          ],
+          const SizedBox(height: 12),
+          OutlinedButton.icon(
+            onPressed: _pickSignatureImage,
+            icon: const Icon(Icons.upload_file),
+            label: Text(
+              _signatureImage != null || _existingSignatureUrl != null
+                  ? 'Change Signature'
+                  : 'Upload Signature',
+            ),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: AppTheme.primaryGreen,
+              side: const BorderSide(color: AppTheme.primaryGreen),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(8),
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Upload a clear image of your signature for contracts',
+            style: TextStyle(color: Colors.grey[500], fontSize: 11),
+            textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _pickSignatureImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 70,
+        maxWidth: 1024,
+      );
+
+      if (image != null) {
+        setState(() {
+          _signatureImage = image;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error picking signature: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to pick signature image'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _saveProfile() async {
     if (!_formKey.currentState!.validate()) {
       return;
     }
 
     // Validate user type specific requirements
-    final currentUser = Provider.of<AppState>(context, listen: false).currentUser;
+    final currentUser = Provider.of<AppState>(
+      context,
+      listen: false,
+    ).currentUser;
     if (currentUser?.userType == UserType.farmer && _selectedCrops.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -584,6 +817,47 @@ class _ProfileEditScreenState extends State<ProfileEditScreen> {
 
       // Update profile
       await _profileService.updateProfile(profileData);
+
+      // Upload signature if a new one was selected
+      if (_signatureImage != null) {
+        debugPrint('📤 Uploading signature from profile edit...');
+        try {
+          final userId =
+              FirebaseAuth.instance.currentUser?.uid ?? currentUser.id;
+          final ref = FirebaseStorage.instance
+              .ref()
+              .child('signatures')
+              .child('$userId.jpg');
+
+          if (kIsWeb) {
+            await ref.putData(await _signatureImage!.readAsBytes());
+          } else {
+            await ref.putFile(File(_signatureImage!.path));
+          }
+
+          final signatureUrl = await ref.getDownloadURL();
+          debugPrint('✅ Signature uploaded: $signatureUrl');
+
+          // Update user document with signature URL
+          await DatabaseService().updateUser(userId, {
+            'signatureUrl': signatureUrl,
+            'updatedAt': DateTime.now().toIso8601String(),
+          });
+          debugPrint('✅ User document updated with signature URL');
+        } catch (e) {
+          debugPrint('❌ Signature upload failed: $e');
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text(
+                  'Signature upload failed, but profile was saved.',
+                ),
+                backgroundColor: Colors.orange,
+              ),
+            );
+          }
+        }
+      }
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(

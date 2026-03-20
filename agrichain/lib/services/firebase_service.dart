@@ -56,10 +56,12 @@ class FirebaseService {
       };
 
       // Store user data in Firestore
-      debugPrint('📝 Attempting to write to Firestore collection: $_usersCollection');
+      debugPrint(
+        '📝 Attempting to write to Firestore collection: $_usersCollection',
+      );
       debugPrint('📝 Document ID: ${userData['id']}');
       debugPrint('📝 Data to write: ${firestoreUserData.toString()}');
-      
+
       await _firestore
           .collection(_usersCollection)
           .doc(userData['id'])
@@ -85,7 +87,10 @@ class FirebaseService {
   }
 
   /// Sync user data to Firestore
-  Future<bool> syncUserData(String userId, Map<String, dynamic> userData) async {
+  Future<bool> syncUserData(
+    String userId,
+    Map<String, dynamic> userData,
+  ) async {
     try {
       // Prepare user data for Firestore (exclude sensitive data)
       final firestoreUserData = {
@@ -157,9 +162,13 @@ class FirebaseService {
         'updatedAt': DateTime.now().toIso8601String(),
       };
 
-      debugPrint('📝 Attempting to write profile to Firestore collection: $_profilesCollection');
+      debugPrint(
+        '📝 Attempting to write profile to Firestore collection: $_profilesCollection',
+      );
       debugPrint('📝 Profile document ID: $userId');
-      debugPrint('📝 Profile data to write: ${firestoreProfileData.toString()}');
+      debugPrint(
+        '📝 Profile data to write: ${firestoreProfileData.toString()}',
+      );
 
       await _firestore
           .collection(_profilesCollection)
@@ -180,10 +189,7 @@ class FirebaseService {
     required Map<String, dynamic> profileData,
   }) async {
     try {
-      await _firestore
-          .collection(_profilesCollection)
-          .doc(userId)
-          .update({
+      await _firestore.collection(_profilesCollection).doc(userId).update({
         'profileData': profileData,
         'updatedAt': DateTime.now().toIso8601String(),
       });
@@ -255,10 +261,7 @@ class FirebaseService {
       };
     } catch (e) {
       debugPrint('Firebase sign in error: $e');
-      return {
-        'success': false,
-        'message': 'Failed to sign in: $e',
-      };
+      return {'success': false, 'message': 'Failed to sign in: $e'};
     }
   }
 
@@ -290,16 +293,10 @@ class FirebaseService {
   Future<bool> deleteUserData(String userId) async {
     try {
       // Delete user document
-      await _firestore
-          .collection(_usersCollection)
-          .doc(userId)
-          .delete();
+      await _firestore.collection(_usersCollection).doc(userId).delete();
 
       // Delete profile document
-      await _firestore
-          .collection(_profilesCollection)
-          .doc(userId)
-          .delete();
+      await _firestore.collection(_profilesCollection).doc(userId).delete();
 
       return true;
     } catch (e) {
@@ -390,20 +387,19 @@ class FirebaseService {
           .where('isActive', isEqualTo: true)
           .get();
 
-      final crops = querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      final crops = querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
 
       // Sort by createdAt in memory to avoid composite index requirement
       crops.sort((a, b) {
         final aCreatedAt = a['createdAt'];
         final bCreatedAt = b['createdAt'];
-        
+
         if (aCreatedAt == null && bCreatedAt == null) return 0;
         if (aCreatedAt == null) return 1;
         if (bCreatedAt == null) return -1;
-        
+
         DateTime aDate, bDate;
         if (aCreatedAt is Timestamp) {
           aDate = aCreatedAt.toDate();
@@ -412,7 +408,7 @@ class FirebaseService {
         } else {
           return 0;
         }
-        
+
         if (bCreatedAt is Timestamp) {
           bDate = bCreatedAt.toDate();
         } else if (bCreatedAt is String) {
@@ -420,7 +416,7 @@ class FirebaseService {
         } else {
           return 0;
         }
-        
+
         return bDate.compareTo(aDate); // Descending order
       });
 
@@ -439,20 +435,19 @@ class FirebaseService {
           .where('farmerId', isEqualTo: farmerId)
           .get();
 
-      final crops = querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      final crops = querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
 
       // Sort by createdAt in memory to avoid composite index requirement
       crops.sort((a, b) {
         final aCreatedAt = a['createdAt'];
         final bCreatedAt = b['createdAt'];
-        
+
         if (aCreatedAt == null && bCreatedAt == null) return 0;
         if (aCreatedAt == null) return 1;
         if (bCreatedAt == null) return -1;
-        
+
         DateTime aDate, bDate;
         if (aCreatedAt is Timestamp) {
           aDate = aCreatedAt.toDate();
@@ -461,7 +456,7 @@ class FirebaseService {
         } else {
           return 0;
         }
-        
+
         if (bCreatedAt is Timestamp) {
           bDate = bCreatedAt.toDate();
         } else if (bCreatedAt is String) {
@@ -469,7 +464,7 @@ class FirebaseService {
         } else {
           return 0;
         }
-        
+
         return bDate.compareTo(aDate); // Descending order
       });
 
@@ -483,10 +478,7 @@ class FirebaseService {
   /// Update crop availability
   Future<bool> updateCropAvailability(String cropId, bool isAvailable) async {
     try {
-      await _firestore
-          .collection(_cropsCollection)
-          .doc(cropId)
-          .update({
+      await _firestore.collection(_cropsCollection).doc(cropId).update({
         'isAvailable': isAvailable,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -513,6 +505,7 @@ class FirebaseService {
       final firestoreOrderData = {
         ...orderData,
         'buyerFirebaseUid': currentUser.uid,
+        'sellerFirebaseUid': orderData['sellerFirebaseUid'] ?? '',
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       };
@@ -539,10 +532,9 @@ class FirebaseService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      return querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
     } catch (e) {
       debugPrint('❌ Firebase get user orders error: $e');
       return [];
@@ -552,10 +544,7 @@ class FirebaseService {
   /// Update order status
   Future<bool> updateOrderStatus(String orderId, String status) async {
     try {
-      await _firestore
-          .collection(_ordersCollection)
-          .doc(orderId)
-          .update({
+      await _firestore.collection(_ordersCollection).doc(orderId).update({
         'status': status,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -578,19 +567,16 @@ class FirebaseService {
 
       // Filter results locally for better search functionality
       final results = querySnapshot.docs
-          .map((doc) => {
-                'id': doc.id,
-                ...doc.data(),
-              })
+          .map((doc) => {'id': doc.id, ...doc.data()})
           .where((crop) {
             final name = (crop['name'] as String? ?? '').toLowerCase();
             final category = (crop['category'] as String? ?? '').toLowerCase();
             final farmer = (crop['farmerName'] as String? ?? '').toLowerCase();
             final query = searchQuery.toLowerCase();
-            
-            return name.contains(query) || 
-                   category.contains(query) || 
-                   farmer.contains(query);
+
+            return name.contains(query) ||
+                category.contains(query) ||
+                farmer.contains(query);
           })
           .toList();
 
@@ -608,10 +594,11 @@ class FirebaseService {
         .where('isActive', isEqualTo: true)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => {
-              'id': doc.id,
-              ...doc.data(),
-            }).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
   }
 
   /// Get real-time orders stream for a user
@@ -621,10 +608,11 @@ class FirebaseService {
         .where('buyerId', isEqualTo: userId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => {
-              'id': doc.id,
-              ...doc.data(),
-            }).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
   }
 
   // ==================== LOAN METHODS ====================
@@ -635,10 +623,7 @@ class FirebaseService {
     required Map<String, dynamic> loanData,
   }) async {
     try {
-      await _firestore
-          .collection(_loanRequestsCollection)
-          .doc(requestId)
-          .set({
+      await _firestore.collection(_loanRequestsCollection).doc(requestId).set({
         ...loanData,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -662,10 +647,9 @@ class FirebaseService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      return querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
     } catch (e) {
       debugPrint('❌ Firebase get loan requests error: $e');
       return [];
@@ -673,7 +657,9 @@ class FirebaseService {
   }
 
   /// Get loan requests for a specific farmer
-  Future<List<Map<String, dynamic>>> getFarmerLoanRequests(String farmerId) async {
+  Future<List<Map<String, dynamic>>> getFarmerLoanRequests(
+    String farmerId,
+  ) async {
     try {
       final querySnapshot = await _firestore
           .collection(_loanRequestsCollection)
@@ -681,10 +667,9 @@ class FirebaseService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      return querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
     } catch (e) {
       debugPrint('❌ Firebase get farmer loan requests error: $e');
       return [];
@@ -697,10 +682,7 @@ class FirebaseService {
     required Map<String, dynamic> offerData,
   }) async {
     try {
-      await _firestore
-          .collection(_loanOffersCollection)
-          .doc(offerId)
-          .set({
+      await _firestore.collection(_loanOffersCollection).doc(offerId).set({
         ...offerData,
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
@@ -716,7 +698,9 @@ class FirebaseService {
   }
 
   /// Get loan offers for a specific farmer
-  Future<List<Map<String, dynamic>>> getFarmerLoanOffers(String farmerId) async {
+  Future<List<Map<String, dynamic>>> getFarmerLoanOffers(
+    String farmerId,
+  ) async {
     try {
       final querySnapshot = await _firestore
           .collection(_loanOffersCollection)
@@ -724,10 +708,9 @@ class FirebaseService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      return querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
     } catch (e) {
       debugPrint('❌ Firebase get farmer loan offers error: $e');
       return [];
@@ -743,10 +726,9 @@ class FirebaseService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      return querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
     } catch (e) {
       debugPrint('❌ Firebase get buyer loan offers error: $e');
       return [];
@@ -756,10 +738,7 @@ class FirebaseService {
   /// Update loan offer status
   Future<bool> updateLoanOfferStatus(String offerId, String status) async {
     try {
-      await _firestore
-          .collection(_loanOffersCollection)
-          .doc(offerId)
-          .update({
+      await _firestore.collection(_loanOffersCollection).doc(offerId).update({
         'status': status,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -779,10 +758,11 @@ class FirebaseService {
         .where('farmerId', isEqualTo: farmerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => {
-              'id': doc.id,
-              ...doc.data(),
-            }).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
   }
 
   /// Get real-time loan offers stream for a farmer
@@ -792,10 +772,11 @@ class FirebaseService {
         .where('farmerId', isEqualTo: farmerId)
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => {
-              'id': doc.id,
-              ...doc.data(),
-            }).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
   }
 
   /// Get real-time active loan requests stream (for buyers)
@@ -805,10 +786,11 @@ class FirebaseService {
         .where('status', isEqualTo: 'active')
         .orderBy('createdAt', descending: true)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => {
-              'id': doc.id,
-              ...doc.data(),
-            }).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
   }
 
   // ==================== TRANSACTION METHODS ====================
@@ -823,10 +805,10 @@ class FirebaseService {
           .collection(_transactionsCollection)
           .doc(transactionId)
           .set({
-        ...transactionData,
-        'createdAt': FieldValue.serverTimestamp(),
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            ...transactionData,
+            'createdAt': FieldValue.serverTimestamp(),
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       debugPrint('✅ Transaction created: $transactionId');
       return true;
@@ -837,7 +819,10 @@ class FirebaseService {
   }
 
   /// Get user transactions
-  Future<List<Map<String, dynamic>>> getUserTransactions(String userId, {int limit = 50}) async {
+  Future<List<Map<String, dynamic>>> getUserTransactions(
+    String userId, {
+    int limit = 50,
+  }) async {
     try {
       final querySnapshot = await _firestore
           .collection(_transactionsCollection)
@@ -846,10 +831,9 @@ class FirebaseService {
           .limit(limit)
           .get();
 
-      return querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      return querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
     } catch (e) {
       debugPrint('❌ Firebase get user transactions error: $e');
       return [];
@@ -865,10 +849,7 @@ class FirebaseService {
           .get();
 
       if (doc.exists) {
-        return {
-          'id': doc.id,
-          ...doc.data()!,
-        };
+        return {'id': doc.id, ...doc.data()!};
       }
       return null;
     } catch (e) {
@@ -878,15 +859,18 @@ class FirebaseService {
   }
 
   /// Update transaction status
-  Future<bool> updateTransactionStatus(String transactionId, String status) async {
+  Future<bool> updateTransactionStatus(
+    String transactionId,
+    String status,
+  ) async {
     try {
       await _firestore
           .collection(_transactionsCollection)
           .doc(transactionId)
           .update({
-        'status': status,
-        'updatedAt': FieldValue.serverTimestamp(),
-      });
+            'status': status,
+            'updatedAt': FieldValue.serverTimestamp(),
+          });
 
       debugPrint('✅ Transaction status updated: $transactionId -> $status');
       return true;
@@ -904,14 +888,18 @@ class FirebaseService {
         .orderBy('createdAt', descending: true)
         .limit(50)
         .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => {
-              'id': doc.id,
-              ...doc.data(),
-            }).toList());
+        .map(
+          (snapshot) => snapshot.docs
+              .map((doc) => {'id': doc.id, ...doc.data()})
+              .toList(),
+        );
   }
 
   /// Get transactions by type (purchase, sale, loan, etc.)
-  Future<List<Map<String, dynamic>>> getTransactionsByType(String userId, String type) async {
+  Future<List<Map<String, dynamic>>> getTransactionsByType(
+    String userId,
+    String type,
+  ) async {
     try {
       final querySnapshot = await _firestore
           .collection(_transactionsCollection)
@@ -920,10 +908,9 @@ class FirebaseService {
           .orderBy('createdAt', descending: true)
           .get();
 
-      return querySnapshot.docs.map((doc) => {
-        'id': doc.id,
-        ...doc.data(),
-      }).toList();
+      return querySnapshot.docs
+          .map((doc) => {'id': doc.id, ...doc.data()})
+          .toList();
     } catch (e) {
       debugPrint('❌ Firebase get transactions by type error: $e');
       return [];
@@ -939,7 +926,7 @@ class FirebaseService {
           .get();
 
       final transactions = querySnapshot.docs.map((doc) => doc.data()).toList();
-      
+
       double totalSpent = 0;
       double totalEarned = 0;
       int totalTransactions = transactions.length;
@@ -948,7 +935,7 @@ class FirebaseService {
       for (final transaction in transactions) {
         final amount = (transaction['amount'] as num?)?.toDouble() ?? 0.0;
         final type = transaction['type'] as String? ?? 'unknown';
-        
+
         if (transaction['isDebit'] == true) {
           totalSpent += amount;
         } else {
@@ -980,10 +967,7 @@ class FirebaseService {
   /// Update user wallet balance
   Future<bool> updateWalletBalance(String userId, double newBalance) async {
     try {
-      await _firestore
-          .collection(_usersCollection)
-          .doc(userId)
-          .update({
+      await _firestore.collection(_usersCollection).doc(userId).update({
         'walletBalance': newBalance,
         'updatedAt': FieldValue.serverTimestamp(),
       });
@@ -1018,7 +1002,11 @@ class FirebaseService {
   // ==================== GENERIC DOCUMENT METHODS ====================
 
   /// Create a document in any collection
-  Future<bool> createDocument(String collection, String documentId, Map<String, dynamic> data) async {
+  Future<bool> createDocument(
+    String collection,
+    String documentId,
+    Map<String, dynamic> data,
+  ) async {
     try {
       final documentData = {
         ...data,
@@ -1026,10 +1014,7 @@ class FirebaseService {
         'updatedAt': FieldValue.serverTimestamp(),
       };
 
-      await _firestore
-          .collection(collection)
-          .doc(documentId)
-          .set(documentData);
+      await _firestore.collection(collection).doc(documentId).set(documentData);
 
       debugPrint('✅ Document created in $collection: $documentId');
       return true;
@@ -1040,7 +1025,11 @@ class FirebaseService {
   }
 
   /// Update a document in any collection
-  Future<bool> updateDocument(String collection, String documentId, Map<String, dynamic> updates) async {
+  Future<bool> updateDocument(
+    String collection,
+    String documentId,
+    Map<String, dynamic> updates,
+  ) async {
     try {
       final updateData = {
         ...updates,
@@ -1061,12 +1050,12 @@ class FirebaseService {
   }
 
   /// Get a document from any collection
-  Future<Map<String, dynamic>?> getDocument(String collection, String documentId) async {
+  Future<Map<String, dynamic>?> getDocument(
+    String collection,
+    String documentId,
+  ) async {
     try {
-      final doc = await _firestore
-          .collection(collection)
-          .doc(documentId)
-          .get();
+      final doc = await _firestore.collection(collection).doc(documentId).get();
 
       if (doc.exists) {
         return doc.data();
@@ -1079,16 +1068,19 @@ class FirebaseService {
   }
 
   /// Get all documents from a collection
-  Future<List<Map<String, dynamic>>> getCollection(String collection, {int? limit}) async {
+  Future<List<Map<String, dynamic>>> getCollection(
+    String collection, {
+    int? limit,
+  }) async {
     try {
       Query query = _firestore.collection(collection);
-      
+
       if (limit != null) {
         query = query.limit(limit);
       }
 
       final querySnapshot = await query.get();
-      
+
       return querySnapshot.docs.map((doc) {
         final data = doc.data() as Map<String, dynamic>;
         data['id'] = doc.id;

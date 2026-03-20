@@ -1,6 +1,8 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -24,18 +26,16 @@ import 'models/firestore_models.dart';
 void main() async {
   // Ensure Flutter binding is initialized
   WidgetsFlutterBinding.ensureInitialized();
-  
+
   // Initialize Firebase with platform-specific options
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
-  
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
   // Set preferred orientations
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
   ]);
-  
+
   runApp(const AgriChainApp());
 }
 
@@ -64,7 +64,7 @@ class _AgriChainAppState extends State<AgriChainApp> {
     try {
       // Check if this is the first time opening the app
       await _checkFirstTimeUser();
-      
+
       final success = await _appInitializer.initialize();
       setState(() {
         _isInitialized = success;
@@ -72,7 +72,8 @@ class _AgriChainAppState extends State<AgriChainApp> {
         _checkingFirstTime = false;
         if (!success) {
           final results = _appInitializer.initializationResults;
-          _errorMessage = results['error']?.toString() ?? 'Unknown initialization error';
+          _errorMessage =
+              results['error']?.toString() ?? 'Unknown initialization error';
         }
       });
     } catch (e) {
@@ -105,12 +106,14 @@ class _AgriChainAppState extends State<AgriChainApp> {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) {
-          final appState = AppState();
-          // Initialize AppState after creation to trigger mock data initialization
-          appState.initialize();
-          return appState;
-        }),
+        ChangeNotifierProvider(
+          create: (_) {
+            final appState = AppState();
+            // Initialize AppState after creation to trigger mock data initialization
+            appState.initialize();
+            return appState;
+          },
+        ),
       ],
       child: MaterialApp(
         title: 'AgriChain',
@@ -138,25 +141,23 @@ class _AgriChainAppState extends State<AgriChainApp> {
     if (_initializationFailed) {
       return _buildErrorScreen();
     }
-    
+
     if (!_isInitialized || _checkingFirstTime) {
       return _buildLoadingScreen();
     }
-    
+
     // Show onboarding for first-time users
     if (_isFirstTime) {
-      return OnboardingScreen(
-        onComplete: _markOnboardingComplete,
-      );
+      return OnboardingScreen(onComplete: _markOnboardingComplete);
     }
-    
+
     return StreamBuilder<User?>(
       stream: FirebaseAuth.instance.authStateChanges(),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return _buildLoadingScreen();
         }
-        
+
         if (snapshot.hasData && snapshot.data != null) {
           // User is signed in, show main screen
           // Note: AppState._onAuthStateChanged will handle loading user data
@@ -172,16 +173,7 @@ class _AgriChainAppState extends State<AgriChainApp> {
   Widget _buildLoadingScreen() {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFF2E7D32),
-              Color(0xFF4CAF50),
-            ],
-          ),
-        ),
+        decoration: const BoxDecoration(color: AppTheme.background),
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -191,58 +183,52 @@ class _AgriChainAppState extends State<AgriChainApp> {
                 width: 120,
                 height: 120,
                 decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withValues(alpha: 0.1),
-                      blurRadius: 10,
-                      offset: const Offset(0, 5),
-                    ),
-                  ],
+                  color: AppTheme.surface,
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: AppTheme.cardShadow,
                 ),
                 child: const Icon(
                   Icons.agriculture,
                   size: 60,
-                  color: Color(0xFF2E7D32),
+                  color: AppTheme.primaryColor,
                 ),
               ),
               const SizedBox(height: 40),
-              
+
               // App Name
-              const Text(
+              Text(
                 'AgriChain',
-                style: TextStyle(
+                style: GoogleFonts.outfit(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: AppTheme.primaryColor,
+                  letterSpacing: -1.0,
                 ),
               ),
               const SizedBox(height: 8),
-              
+
               // Tagline
-              const Text(
+              Text(
                 'Empowering Agriculture with Blockchain',
-                style: TextStyle(
+                style: GoogleFonts.inter(
                   fontSize: 16,
-                  color: Colors.white70,
+                  color: AppTheme.textSecondary,
                 ),
               ),
               const SizedBox(height: 60),
-              
+
               // Loading Indicator
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  AppTheme.primaryColor,
+                ),
               ),
               const SizedBox(height: 20),
-              
+
               // Loading Text
               const Text(
                 'Initializing application...',
-                style: TextStyle(
-                  fontSize: 16,
-                  color: Colors.white70,
-                ),
+                style: TextStyle(fontSize: 16, color: AppTheme.textSecondary),
               ),
             ],
           ),
@@ -254,16 +240,7 @@ class _AgriChainAppState extends State<AgriChainApp> {
   Widget _buildErrorScreen() {
     return Scaffold(
       body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [
-              Color(0xFFD32F2F),
-              Color(0xFFE57373),
-            ],
-          ),
-        ),
+        decoration: const BoxDecoration(color: AppTheme.background),
         child: Center(
           child: Padding(
             padding: const EdgeInsets.all(24.0),
@@ -275,46 +252,40 @@ class _AgriChainAppState extends State<AgriChainApp> {
                   width: 120,
                   height: 120,
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.1),
-                        blurRadius: 10,
-                        offset: const Offset(0, 5),
-                      ),
-                    ],
+                    color: AppTheme.surface,
+                    borderRadius: BorderRadius.circular(32),
+                    boxShadow: AppTheme.cardShadow,
                   ),
                   child: const Icon(
                     Icons.error_outline,
                     size: 60,
-                    color: Color(0xFFD32F2F),
+                    color: AppTheme.error,
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // Error Title
-                const Text(
+                Text(
                   'Initialization Failed',
-                  style: TextStyle(
+                  style: GoogleFonts.outfit(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.white,
+                    color: AppTheme.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 16),
-                
+
                 // Error Message
                 Text(
                   _errorMessage,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     fontSize: 16,
-                    color: Colors.white70,
+                    color: AppTheme.textSecondary,
                   ),
                 ),
                 const SizedBox(height: 40),
-                
+
                 // Retry Button
                 ElevatedButton(
                   onPressed: () {
@@ -326,19 +297,19 @@ class _AgriChainAppState extends State<AgriChainApp> {
                     _initializeApp();
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFFD32F2F),
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    backgroundColor: AppTheme.primaryColor,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                   ),
                   child: const Text(
                     'Retry',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -405,9 +376,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       label: 'Marketplace',
     ),
     const BottomNavigationBarItem(
-      icon: Icon(Icons.download_outlined),
-      activeIcon: Icon(Icons.download),
-      label: 'Downloads',
+      icon: Icon(Icons.description_outlined),
+      activeIcon: Icon(Icons.description),
+      label: 'Contracts',
     ),
     const BottomNavigationBarItem(
       icon: Icon(Icons.person_outline),
@@ -439,9 +410,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       label: 'Loans',
     ),
     const BottomNavigationBarItem(
-      icon: Icon(Icons.download_outlined),
-      activeIcon: Icon(Icons.download),
-      label: 'Downloads',
+      icon: Icon(Icons.description_outlined),
+      activeIcon: Icon(Icons.description),
+      label: 'Contracts',
     ),
     const BottomNavigationBarItem(
       icon: Icon(Icons.analytics_outlined),
@@ -457,13 +428,9 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       duration: const Duration(milliseconds: 300),
       vsync: this,
     );
-    _fadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(CurvedAnimation(
-      parent: _animationController,
-      curve: Curves.easeInOut,
-    ));
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
+    );
     _animationController.forward();
   }
 
@@ -489,18 +456,16 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
       builder: (context, appState, child) {
         final user = appState.currentUser;
         final firebaseUser = FirebaseAuth.instance.currentUser;
-        
+
         // Show loading while user data is being loaded
         if (appState.isLoading) {
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryGreen,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.primaryGreen),
             ),
           );
         }
-        
+
         // If no user data but Firebase user exists, try loading user data
         if (user == null && firebaseUser != null) {
           // Trigger user data loading if not already loading
@@ -514,9 +479,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  CircularProgressIndicator(
-                    color: AppTheme.primaryGreen,
-                  ),
+                  CircularProgressIndicator(color: AppTheme.primaryGreen),
                   SizedBox(height: 16),
                   Text(
                     'Loading your profile...',
@@ -530,7 +493,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             ),
           );
         }
-        
+
         // If no Firebase user, show login message
         if (firebaseUser == null) {
           return const Scaffold(
@@ -538,11 +501,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(
-                    Icons.login,
-                    size: 64,
-                    color: AppTheme.primaryGreen,
-                  ),
+                  Icon(Icons.login, size: 64, color: AppTheme.primaryGreen),
                   SizedBox(height: 16),
                   Text(
                     'Please log in to continue',
@@ -556,7 +515,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             ),
           );
         }
-        
+
         // If user data failed to load, show error and redirect to login
         if (user == null && appState.error != null) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -574,9 +533,7 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
           });
           return const Scaffold(
             body: Center(
-              child: CircularProgressIndicator(
-                color: AppTheme.primaryGreen,
-              ),
+              child: CircularProgressIndicator(color: AppTheme.primaryGreen),
             ),
           );
         }
@@ -591,13 +548,24 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
         }
 
         return Scaffold(
+          extendBody: true, // Allow body to scroll behind nav bar
           appBar: AppBar(
-            backgroundColor: AppTheme.primaryGreen,
-            foregroundColor: Colors.white,
-            title: Text(_getScreenTitle(isBuyer)),
+            backgroundColor: AppTheme.background,
+            foregroundColor: AppTheme.textPrimary,
+            elevation: 0,
+            centerTitle: true,
+            title: Text(
+              _getScreenTitle(isBuyer),
+              style: GoogleFonts.outfit(
+                // Using Outfit if available, or just TextStyle
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryColor,
+              ),
+            ),
             actions: [
               IconButton(
                 icon: const Icon(Icons.logout),
+                color: AppTheme.textSecondary,
                 onPressed: () async {
                   await FirebaseAuth.instance.signOut();
                   appState.clearUser();
@@ -611,30 +579,48 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
             child: screens[_currentIndex],
           ),
           bottomNavigationBar: Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 24),
             decoration: BoxDecoration(
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 10,
-                  offset: const Offset(0, -5),
-                ),
-              ],
-            ),
-            child: BottomNavigationBar(
-              currentIndex: _currentIndex,
-              onTap: _onTabTapped,
-              items: navItems,
-              type: BottomNavigationBarType.fixed,
-              backgroundColor: Colors.white,
-              selectedItemColor: AppTheme.primaryGreen,
-              unselectedItemColor: AppTheme.grey,
-              selectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 12,
+              color: AppTheme.surface.withValues(alpha: 0.85),
+              borderRadius: BorderRadius.circular(32),
+              boxShadow: AppTheme.floatingShadow,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.5,
               ),
-              unselectedLabelStyle: const TextStyle(
-                fontWeight: FontWeight.w400,
-                fontSize: 12,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(32),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                child: Theme(
+                  data: Theme.of(context).copyWith(
+                    splashColor: Colors.transparent,
+                    highlightColor: Colors.transparent,
+                  ),
+                  child: BottomNavigationBar(
+                    currentIndex: _currentIndex,
+                    onTap: _onTabTapped,
+                    items: navItems,
+                    type: BottomNavigationBarType.fixed,
+                    elevation: 0,
+                    backgroundColor: Colors.transparent,
+                    selectedItemColor: AppTheme.primaryColor,
+                    unselectedItemColor: AppTheme.textSecondary,
+                    showSelectedLabels: true,
+                    showUnselectedLabels: false, // Cleaner look for 6 items
+                    selectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 10,
+                      height: 1.5,
+                    ),
+                    unselectedLabelStyle: const TextStyle(
+                      fontWeight: FontWeight.w400,
+                      fontSize: 10,
+                    ),
+                    iconSize: 22,
+                  ),
+                ),
               ),
             ),
           ),
@@ -646,21 +632,33 @@ class _MainScreenState extends State<MainScreen> with TickerProviderStateMixin {
   String _getScreenTitle(bool isBuyer) {
     if (isBuyer) {
       switch (_currentIndex) {
-        case 0: return 'Marketplace';
-        case 1: return 'Wallet';
-        case 2: return 'Profile';
-        case 3: return 'Loans';
-        case 4: return 'Analytics';
-        default: return 'AgriChain';
+        case 0:
+          return 'Marketplace';
+        case 1:
+          return 'Wallet';
+        case 2:
+          return 'Profile';
+        case 3:
+          return 'Loans';
+        case 4:
+          return 'Analytics';
+        default:
+          return 'AgriChain';
       }
     } else {
       switch (_currentIndex) {
-        case 0: return 'Home';
-        case 1: return 'My Crops';
-        case 2: return 'Loans';
-        case 3: return 'Marketplace';
-        case 4: return 'Profile';
-        default: return 'AgriChain';
+        case 0:
+          return 'Home';
+        case 1:
+          return 'My Crops';
+        case 2:
+          return 'Loans';
+        case 3:
+          return 'Marketplace';
+        case 4:
+          return 'Profile';
+        default:
+          return 'AgriChain';
       }
     }
   }

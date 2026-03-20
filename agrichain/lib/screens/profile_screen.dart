@@ -48,7 +48,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _loadProfileData() async {
     final appState = Provider.of<AppState>(context, listen: false);
     final userId = appState.currentUser?.id;
-    
+
     if (userId != null) {
       try {
         final profileData = await _profileService.getUserProfile(userId);
@@ -79,7 +79,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
       if (isConnected) {
         final address = WalletService.connectedAddress;
         final balance = await WalletService.getWalletBalance();
-        
+
         if (mounted) {
           setState(() {
             _isWalletConnected = true;
@@ -96,11 +96,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Future<void> _connectWallet() async {
     final result = await Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const WalletConnectionScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const WalletConnectionScreen()),
     );
-    
+
     if (result == true) {
       await _checkWalletConnection();
     }
@@ -157,74 +155,140 @@ class _ProfileScreenState extends State<ProfileScreen> {
       builder: (context, appState, child) {
         final user = appState.currentUser;
         return Container(
-          padding: const EdgeInsets.all(20),
+          width: double.infinity,
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppTheme.primaryGreen, AppTheme.accentGreen],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryGreen.withOpacity(0.1),
+                blurRadius: 20,
+                offset: const Offset(0, 10),
+              ),
+            ],
           ),
-          child: Column(
+          child: Stack(
             children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(40),
-                ),
-                child: Icon(
-                  Icons.person,
-                  size: 40,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Text(
-                user?.name ?? 'Guest User',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
+              // Background Pattern
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Opacity(
+                  opacity: 0.1,
+                  child: Icon(
+                    Icons.spa,
+                    size: 200,
+                    color: AppTheme.primaryGreen,
+                  ),
                 ),
               ),
-              const SizedBox(height: 4),
-              Text(
-                user?.email ?? 'No email provided',
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                  color: Colors.white.withValues(alpha: 0.9),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: Colors.white.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
                   children: [
-                    Icon(
-                      Icons.verified,
-                      size: 16,
-                      color: Colors.white,
+                    // Avatar and Info
+                    Row(
+                      children: [
+                        Container(
+                          width: 80,
+                          height: 80,
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                AppTheme.primaryGreen,
+                                AppTheme.accentGreen,
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.primaryGreen.withOpacity(0.3),
+                                blurRadius: 10,
+                                offset: const Offset(0, 5),
+                              ),
+                            ],
+                          ),
+                          child: Center(
+                            child: Text(
+                              user?.name.isNotEmpty == true
+                                  ? user!.name[0].toUpperCase()
+                                  : 'U',
+                              style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 20),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                user?.name ?? 'Guest User',
+                                style: Theme.of(context).textTheme.headlineSmall
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: AppTheme.darkGreen,
+                                    ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                user?.email ?? 'No email provided',
+                                style: Theme.of(context).textTheme.bodyMedium
+                                    ?.copyWith(color: AppTheme.grey),
+                              ),
+                              const SizedBox(height: 8),
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 12,
+                                  vertical: 6,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: AppTheme.primaryGreen.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                  border: Border.all(
+                                    color: AppTheme.primaryGreen.withOpacity(
+                                      0.2,
+                                    ),
+                                  ),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.verified,
+                                      size: 14,
+                                      color: AppTheme.primaryGreen,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      user?.userType == UserType.farmer
+                                          ? 'Verified Farmer'
+                                          : 'Verified Buyer',
+                                      style: const TextStyle(
+                                        color: AppTheme.primaryGreen,
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 4),
-                    Text(
-                      user?.userType == UserType.farmer ? 'Verified Farmer' : 'Verified Buyer',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                    const SizedBox(height: 24),
+                    _buildRatingSection(appState),
                   ],
                 ),
               ),
-              const SizedBox(height: 16),
-              _buildRatingSection(appState),
             ],
           ),
         );
@@ -236,70 +300,11 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Consumer<AppState>(
       builder: (context, appState, child) {
         if (_isLoadingProfile) {
-          return Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: const Center(
-              child: CircularProgressIndicator(),
-            ),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
 
         if (_profileData == null) {
-          return Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: Column(
-              children: [
-                Icon(
-                  Icons.info_outline,
-                  size: 48,
-                  color: AppTheme.grey,
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Profile Not Complete',
-                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.darkGrey,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Complete your profile to unlock all features',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                    color: AppTheme.grey,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: () => _editProfile(context),
-                  child: const Text('Complete Profile'),
-                ),
-              ],
-            ),
-          );
+          return _buildEmptyProfileState();
         }
 
         // Parse profile data
@@ -307,7 +312,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         if (_profileData!['profileData'] is String) {
           try {
             profileInfo = Map<String, dynamic>.from(
-              jsonDecode(_profileData!['profileData'])
+              jsonDecode(_profileData!['profileData']),
             );
           } catch (e) {
             debugPrint('Error parsing profile data: $e');
@@ -317,65 +322,101 @@ class _ProfileScreenState extends State<ProfileScreen> {
         }
 
         final userType = appState.currentUser?.userType;
-        
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
                 children: [
-                  Icon(
-                    Icons.person_outline,
-                    color: AppTheme.primaryGreen,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
                   Text(
                     'Profile Details',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.darkGrey,
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.darkGreen,
                     ),
                   ),
                   const Spacer(),
-                  TextButton(
+                  TextButton.icon(
                     onPressed: () => _editProfile(context),
-                    child: const Text('Edit'),
+                    icon: const Icon(Icons.edit, size: 16),
+                    label: const Text('Edit'),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              _buildProfileInfoGrid(profileInfo, userType),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            _buildProfileInfoGrid(profileInfo, userType),
+          ],
         );
       },
     );
   }
 
-  Widget _buildProfileInfoGrid(Map<String, dynamic> profileInfo, UserType? userType) {
+  Widget _buildEmptyProfileState() {
+    return Container(
+      padding: const EdgeInsets.all(32),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: AppTheme.inputBorder),
+      ),
+      child: Column(
+        children: [
+          Icon(
+            Icons.person_add_outlined,
+            size: 64,
+            color: AppTheme.primaryGreen.withOpacity(0.5),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Complete Your Profile',
+            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.darkGrey,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Add your details to unlock all features and build trust.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(color: AppTheme.grey),
+          ),
+          const SizedBox(height: 24),
+          ElevatedButton(
+            onPressed: () => _editProfile(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppTheme.primaryGreen,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: const Text('Complete Profile'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildProfileInfoGrid(
+    Map<String, dynamic> profileInfo,
+    UserType? userType,
+  ) {
     final List<Widget> infoCards = [];
 
     // Location Information
     if (profileInfo['address'] != null || profileInfo['city'] != null) {
-      infoCards.add(_buildInfoCard(
-        'Location',
-        _buildLocationInfo(profileInfo),
-        Icons.location_on_outlined,
-        AppTheme.primaryGreen,
-      ));
+      infoCards.add(
+        _buildInfoCard(
+          'Location',
+          _buildLocationInfo(profileInfo),
+          Icons.location_on_outlined,
+          AppTheme.primaryGreen,
+        ),
+      );
     }
 
     // User Type Specific Information
@@ -386,22 +427,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
 
     // Additional Information
-    if (profileInfo['bio'] != null && profileInfo['bio'].toString().isNotEmpty) {
-      infoCards.add(_buildInfoCard(
-        'Bio',
-        profileInfo['bio'].toString(),
-        Icons.description_outlined,
-        AppTheme.accentGreen,
-      ));
+    if (profileInfo['bio'] != null &&
+        profileInfo['bio'].toString().isNotEmpty) {
+      infoCards.add(
+        _buildInfoCard(
+          'Bio',
+          profileInfo['bio'].toString(),
+          Icons.description_outlined,
+          AppTheme.accentGreen,
+        ),
+      );
     }
 
-    if (profileInfo['experience'] != null && profileInfo['experience'].toString().isNotEmpty) {
-      infoCards.add(_buildInfoCard(
-        'Experience',
-        '${profileInfo['experience']} years',
-        Icons.work_outline,
-        AppTheme.sunYellow,
-      ));
+    if (profileInfo['experience'] != null &&
+        profileInfo['experience'].toString().isNotEmpty) {
+      infoCards.add(
+        _buildInfoCard(
+          'Experience',
+          '${profileInfo['experience']} years',
+          Icons.work_outline,
+          AppTheme.sunYellow,
+        ),
+      );
     }
 
     return Column(
@@ -426,21 +473,26 @@ class _ProfileScreenState extends State<ProfileScreen> {
   String _buildLocationInfo(Map<String, dynamic> profileInfo) {
     final parts = <String>[];
     if (profileInfo['city'] != null) parts.add(profileInfo['city'].toString());
-    if (profileInfo['state'] != null) parts.add(profileInfo['state'].toString());
-    if (profileInfo['pincode'] != null) parts.add(profileInfo['pincode'].toString());
+    if (profileInfo['state'] != null)
+      parts.add(profileInfo['state'].toString());
+    if (profileInfo['pincode'] != null)
+      parts.add(profileInfo['pincode'].toString());
     return parts.join(', ');
   }
 
   List<Widget> _buildFarmerSpecificCards(Map<String, dynamic> profileInfo) {
     final List<Widget> cards = [];
 
-    if (profileInfo['farmSize'] != null && profileInfo['farmSize'].toString().isNotEmpty) {
-      cards.add(_buildInfoCard(
-        'Farm Size',
-        profileInfo['farmSize'].toString(),
-        Icons.landscape_outlined,
-        AppTheme.earthBrown,
-      ));
+    if (profileInfo['farmSize'] != null &&
+        profileInfo['farmSize'].toString().isNotEmpty) {
+      cards.add(
+        _buildInfoCard(
+          'Farm Size',
+          profileInfo['farmSize'].toString(),
+          Icons.landscape_outlined,
+          AppTheme.earthBrown,
+        ),
+      );
     }
 
     if (profileInfo['crops'] != null) {
@@ -454,14 +506,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } else {
         cropsText = profileInfo['crops'].toString();
       }
-      
+
       if (cropsText.isNotEmpty) {
-        cards.add(_buildInfoCard(
-          'Crops',
-          cropsText,
-          Icons.grass_outlined,
-          AppTheme.primaryGreen,
-        ));
+        cards.add(
+          _buildInfoCard(
+            'Crops',
+            cropsText,
+            Icons.grass_outlined,
+            AppTheme.primaryGreen,
+          ),
+        );
       }
     }
 
@@ -471,22 +525,28 @@ class _ProfileScreenState extends State<ProfileScreen> {
   List<Widget> _buildBuyerSpecificCards(Map<String, dynamic> profileInfo) {
     final List<Widget> cards = [];
 
-    if (profileInfo['businessType'] != null && profileInfo['businessType'].toString().isNotEmpty) {
-      cards.add(_buildInfoCard(
-        'Business Type',
-        profileInfo['businessType'].toString(),
-        Icons.business_outlined,
-        AppTheme.primaryGreen,
-      ));
+    if (profileInfo['businessType'] != null &&
+        profileInfo['businessType'].toString().isNotEmpty) {
+      cards.add(
+        _buildInfoCard(
+          'Business Type',
+          profileInfo['businessType'].toString(),
+          Icons.business_outlined,
+          AppTheme.primaryGreen,
+        ),
+      );
     }
 
-    if (profileInfo['gstNumber'] != null && profileInfo['gstNumber'].toString().isNotEmpty) {
-      cards.add(_buildInfoCard(
-        'GST Number',
-        profileInfo['gstNumber'].toString(),
-        Icons.receipt_outlined,
-        AppTheme.sunYellow,
-      ));
+    if (profileInfo['gstNumber'] != null &&
+        profileInfo['gstNumber'].toString().isNotEmpty) {
+      cards.add(
+        _buildInfoCard(
+          'GST Number',
+          profileInfo['gstNumber'].toString(),
+          Icons.receipt_outlined,
+          AppTheme.sunYellow,
+        ),
+      );
     }
 
     if (profileInfo['services'] != null) {
@@ -500,29 +560,34 @@ class _ProfileScreenState extends State<ProfileScreen> {
       } else {
         servicesText = profileInfo['services'].toString();
       }
-      
+
       if (servicesText.isNotEmpty) {
-        cards.add(_buildInfoCard(
-          'Services',
-          servicesText,
-          Icons.handyman_outlined,
-          AppTheme.accentGreen,
-        ));
+        cards.add(
+          _buildInfoCard(
+            'Services',
+            servicesText,
+            Icons.handyman_outlined,
+            AppTheme.accentGreen,
+          ),
+        );
       }
     }
 
     return cards;
   }
 
-  Widget _buildInfoCard(String title, String value, IconData icon, Color color) {
+  Widget _buildInfoCard(
+    String title,
+    String value,
+    IconData icon,
+    Color color,
+  ) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color.withOpacity(0.1),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withOpacity(0.3),
-        ),
+        border: Border.all(color: color.withOpacity(0.3)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -563,512 +628,499 @@ class _ProfileScreenState extends State<ProfileScreen> {
     // Default rating stats since FirestoreUser doesn't have rating properties yet
     final buyerStats = _createDefaultRatingStats();
     final sellerStats = _createDefaultRatingStats();
-    
-    return Row(
-      children: [
-        Expanded(
-          child: GestureDetector(
-            onTap: () => _showRatings(RatingType.buyer),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                children: [
-                  Text(
-                    'As Buyer',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        buyerStats.averageRating.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '(${buyerStats.totalRatings})',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: AppTheme.background,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: [
+          _buildRatingItem(
+            'Buyer Rating',
+            buyerStats.averageRating,
+            buyerStats.totalRatings,
+            RatingType.buyer,
+          ),
+          Container(height: 40, width: 1, color: AppTheme.inputBorder),
+          _buildRatingItem(
+            'Seller Rating',
+            sellerStats.averageRating,
+            sellerStats.totalRatings,
+            RatingType.seller,
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRatingItem(
+    String label,
+    double rating,
+    int count,
+    RatingType type,
+  ) {
+    return GestureDetector(
+      onTap: () => _showRatings(type),
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              color: AppTheme.grey,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: GestureDetector(
-            onTap: () => _showRatings(RatingType.seller),
-            child: Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.15),
-                borderRadius: BorderRadius.circular(12),
+          const SizedBox(height: 4),
+          Row(
+            children: [
+              Text(
+                rating.toStringAsFixed(1),
+                style: const TextStyle(
+                  color: AppTheme.darkGreen,
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
-              child: Column(
-                children: [
-                  Text(
-                    'As Seller',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.9),
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.star,
-                        color: Colors.amber,
-                        size: 16,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        sellerStats.averageRating.toStringAsFixed(1),
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  Text(
-                    '(${sellerStats.totalRatings})',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.8),
-                      fontSize: 10,
-                    ),
-                  ),
-                ],
-              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.star_rounded, color: Colors.amber, size: 20),
+            ],
+          ),
+          Text(
+            '$count Reviews',
+            style: const TextStyle(
+              color: AppTheme.primaryGreen,
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
   Widget _buildWalletSection() {
     return Consumer<AppState>(
       builder: (context, appState, child) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 10,
-                offset: const Offset(0, 2),
-              ),
-            ],
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
+        return Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Icon(
-                    Icons.account_balance_wallet,
-                    color: AppTheme.primaryGreen,
-                    size: 24,
-                  ),
-                  const SizedBox(width: 12),
                   Text(
-                    'Wallet & Blockchain',
-                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.darkGrey,
+                    'My Wallet',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.darkGreen,
                     ),
                   ),
-                  const Spacer(),
                   TextButton(
                     onPressed: () => _showWalletDetails(context),
-                    child: const Text('View Details'),
+                    child: const Text('View History'),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              
-              // Traditional Wallet Balance
-              Row(
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              height: 180,
+              child: ListView(
+                scrollDirection: Axis.horizontal,
+                physics: const BouncingScrollPhysics(),
                 children: [
-                  Expanded(
-                    child: _buildWalletCard(
-                      'INR Balance',
-                      '₹${appState.currentUser?.walletBalance.toStringAsFixed(0) ?? '0'}',
-                      Icons.currency_rupee,
-                      AppTheme.primaryGreen,
-                    ),
+                  _buildWalletBalanceCard(
+                    context,
+                    'Available Balance',
+                    '₹${appState.currentUser?.walletBalance.toStringAsFixed(0) ?? '0'}',
+                    Colors.white,
+                    AppTheme.primaryGreen,
+                    AppTheme.accentGreen,
+                    Icons.account_balance_wallet,
                   ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildWalletCard(
-                      'Crypto Balance',
-                      '${_walletBalance.toStringAsFixed(4)} ETH',
-                      Icons.currency_bitcoin,
-                      AppTheme.sunYellow,
-                    ),
+                  const SizedBox(width: 16),
+                  _buildWalletBalanceCard(
+                    context,
+                    'Crypto Assets',
+                    '${_walletBalance.toStringAsFixed(4)} ETH',
+                    AppTheme.darkGreen,
+                    Colors.white,
+                    Colors.white.withOpacity(0.9),
+                    Icons.currency_bitcoin,
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              
-              // Blockchain Wallet Section
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: _isWalletConnected 
-                    ? AppTheme.primaryGreen.withValues(alpha: 0.1)
-                    : Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(
-                    color: _isWalletConnected 
-                      ? AppTheme.primaryGreen.withValues(alpha: 0.3)
-                      : Colors.grey.withValues(alpha: 0.3),
+            ),
+            const SizedBox(height: 24),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildActionButton(
+                    context,
+                    'Add Money',
+                    Icons.add_circle_outline,
+                    AppTheme.primaryGreen,
+                    () => _addMoney(context),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          _isWalletConnected ? Icons.check_circle : Icons.account_balance_wallet_outlined,
-                          color: _isWalletConnected ? AppTheme.primaryGreen : Colors.grey,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          _isWalletConnected ? 'Blockchain Wallet Connected' : 'Connect Blockchain Wallet',
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: _isWalletConnected ? AppTheme.primaryGreen : Colors.grey[700],
-                          ),
-                        ),
-                      ],
-                    ),
-                    if (_isWalletConnected && _walletAddress != null) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Address: ${_walletAddress!.substring(0, 6)}...${_walletAddress!.substring(_walletAddress!.length - 4)}',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ],
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildActionButton(
+                    context,
+                    'Withdraw',
+                    Icons.arrow_circle_up,
+                    AppTheme.darkGrey,
+                    () => _withdrawMoney(context),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Action Buttons
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: () => _addMoney(context),
-                      icon: const Icon(Icons.add),
-                      label: const Text('Add Money'),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: ElevatedButton.icon(
-                      onPressed: () => _withdrawMoney(context),
-                      icon: const Icon(Icons.remove),
-                      label: const Text('Withdraw'),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: OutlinedButton.icon(
-                      onPressed: _isWalletConnected ? _viewTransactionHistory : _connectWallet,
-                      icon: Icon(_isWalletConnected ? Icons.history : Icons.link),
-                      label: Text(_isWalletConnected ? 'Transactions' : 'Connect Wallet'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: _isWalletConnected ? AppTheme.primaryGreen : Colors.blue,
-                      ),
-                    ),
-                  ),
-                  if (_isWalletConnected) ...[
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: OutlinedButton.icon(
-                        onPressed: () async {
-                          await WalletService.disconnectWallet(userId: appState.currentUser?.id);
-                          await _checkWalletConnection();
-                        },
-                        icon: const Icon(Icons.link_off),
-                        label: const Text('Disconnect'),
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildBlockchainStatusCard(),
+          ],
         );
       },
     );
   }
 
-  Widget _buildWalletCard(String title, String amount, IconData icon, Color color) {
+  Widget _buildWalletBalanceCard(
+    BuildContext context,
+    String title,
+    String amount,
+    Color textColor,
+    Color bgColor1,
+    Color bgColor2,
+    IconData icon,
+  ) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      width: 280,
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: color.withValues(alpha: 0.3),
+        gradient: LinearGradient(
+          colors: [bgColor1, bgColor2],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
         ),
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: [
+          BoxShadow(
+            color: bgColor1.withOpacity(0.2),
+            blurRadius: 15,
+            offset: const Offset(0, 8),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(icon, color: color, size: 20),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: TextStyle(
-              color: AppTheme.grey,
-              fontSize: 12,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Icon(icon, color: textColor, size: 24),
+              ),
+            ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            amount,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              color: color,
-              fontSize: 18,
-            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: TextStyle(
+                  color: textColor.withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                amount,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
+  Widget _buildActionButton(
+    BuildContext context,
+    String label,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
+    return ElevatedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon),
+      label: Text(label),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: color,
+        foregroundColor: Colors.white,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        elevation: 0,
+      ),
+    );
+  }
+
+  Widget _buildBlockchainStatusCard() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: _isWalletConnected
+            ? AppTheme.primaryGreen.withOpacity(0.1)
+            : Colors.grey.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: _isWalletConnected
+              ? AppTheme.primaryGreen.withOpacity(0.2)
+              : Colors.grey.withOpacity(0.2),
+        ),
+      ),
+      child: Row(
+        children: [
+          Icon(
+            _isWalletConnected ? Icons.link : Icons.link_off,
+            color: _isWalletConnected ? AppTheme.primaryGreen : Colors.grey,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  _isWalletConnected
+                      ? 'Wallet Connected'
+                      : 'Wallet Disconnected',
+                  style: TextStyle(
+                    fontWeight: FontWeight.w600,
+                    color: _isWalletConnected
+                        ? AppTheme.darkGreen
+                        : Colors.grey[700],
+                  ),
+                ),
+                if (_isWalletConnected && _walletAddress != null)
+                  Text(
+                    '${_walletAddress!.substring(0, 6)}...${_walletAddress!.substring(_walletAddress!.length - 4)}',
+                    style: const TextStyle(fontSize: 12, color: AppTheme.grey),
+                  ),
+              ],
+            ),
+          ),
+          if (!_isWalletConnected)
+            TextButton(onPressed: _connectWallet, child: const Text('Connect'))
+          else
+            IconButton(
+              icon: const Icon(Icons.logout, size: 20),
+              color: Colors.red,
+              onPressed: () async {
+                final appState = Provider.of<AppState>(context, listen: false);
+                await WalletService.disconnectWallet(
+                  userId: appState.currentUser?.id,
+                );
+                await _checkWalletConnection();
+              },
+            ),
+        ],
+      ),
+    );
+  }
+
+  // Helper method for wallet card was replaced by _buildWalletBalanceCard
+
   Widget _buildMenuSection() {
     return Column(
       children: [
-        _buildMenuGroup(
-          'Account',
-          [
-            _MenuItemData(
-              icon: Icons.person_outline,
-              title: 'Personal Information',
-              subtitle: 'Update your profile details',
-              onTap: () => _editProfile(context),
-            ),
-            _MenuItemData(
-              icon: Icons.star_outline,
-              title: 'Ratings & Reviews',
-              subtitle: 'View your ratings and feedback',
-              onTap: () => _showAllRatings(context),
-            ),
-            _MenuItemData(
-              icon: Icons.security,
-              title: 'Security',
-              subtitle: 'Password, 2FA, biometric',
-              onTap: () => _showSecuritySettings(context),
-            ),
-            _MenuItemData(
-              icon: Icons.verified_user,
-              title: 'Verification',
-              subtitle: 'KYC and document verification',
-              onTap: () => _showVerificationStatus(context),
-            ),
-          ],
-        ),
+        _buildMenuGroup('Account', [
+          _MenuItemData(
+            icon: Icons.person_outline,
+            title: 'Personal Information',
+            subtitle: 'Update your profile details',
+            onTap: () => _editProfile(context),
+          ),
+          _MenuItemData(
+            icon: Icons.star_outline,
+            title: 'Ratings & Reviews',
+            subtitle: 'View your ratings and feedback',
+            onTap: () => _showAllRatings(context),
+          ),
+          _MenuItemData(
+            icon: Icons.security,
+            title: 'Security',
+            subtitle: 'Password, 2FA, biometric',
+            onTap: () => _showSecuritySettings(context),
+          ),
+          _MenuItemData(
+            icon: Icons.verified_user,
+            title: 'Verification',
+            subtitle: 'KYC and document verification',
+            onTap: () => _showVerificationStatus(context),
+          ),
+        ]),
         const SizedBox(height: 24),
-        _buildMenuGroup(
-          'Blockchain & NFTs',
-          [
-            _MenuItemData(
-              icon: Icons.landscape,
-              title: 'Mint Land NFT',
-              subtitle: 'Tokenize your land property',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MintLandNFTScreen()),
+        _buildMenuGroup('Blockchain & NFTs', [
+          _MenuItemData(
+            icon: Icons.landscape,
+            title: 'Mint Land NFT',
+            subtitle: 'Tokenize your land property',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MintLandNFTScreen(),
               ),
             ),
-            _MenuItemData(
-              icon: Icons.agriculture,
-              title: 'Mint Crop NFT',
-              subtitle: 'Tokenize your crop harvest',
-              onTap: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (context) => const MintCropNFTScreen()),
+          ),
+          _MenuItemData(
+            icon: Icons.agriculture,
+            title: 'Mint Crop NFT',
+            subtitle: 'Tokenize your crop harvest',
+            onTap: () => Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MintCropNFTScreen(),
               ),
             ),
-            _MenuItemData(
-              icon: Icons.account_balance_wallet,
-              title: 'Blockchain Wallet',
-              subtitle: _isWalletConnected ? 'Connected' : 'Not connected',
-              onTap: _isWalletConnected ? _viewTransactionHistory : _connectWallet,
-            ),
-          ],
-        ),
+          ),
+          _MenuItemData(
+            icon: Icons.account_balance_wallet,
+            title: 'Blockchain Wallet',
+            subtitle: _isWalletConnected ? 'Connected' : 'Not connected',
+            onTap: _isWalletConnected
+                ? _viewTransactionHistory
+                : _connectWallet,
+          ),
+        ]),
         const SizedBox(height: 24),
-        _buildMenuGroup(
-          'Preferences',
-          [
-            _MenuItemData(
-              icon: Icons.notifications_outlined,
-              title: 'Notifications',
-              subtitle: _notificationsEnabled ? 'Enabled' : 'Disabled',
-              onTap: () => _showNotificationSettings(context),
-              trailing: Switch(
-                value: _notificationsEnabled,
-                onChanged: (value) {
-                  setState(() {
-                    _notificationsEnabled = value;
-                  });
-                },
-                activeThumbColor: AppTheme.primaryGreen,
-              ),
+        _buildMenuGroup('Preferences', [
+          _MenuItemData(
+            icon: Icons.notifications_outlined,
+            title: 'Notifications',
+            subtitle: _notificationsEnabled ? 'Enabled' : 'Disabled',
+            onTap: () => _showNotificationSettings(context),
+            trailing: Switch(
+              value: _notificationsEnabled,
+              onChanged: (value) {
+                setState(() {
+                  _notificationsEnabled = value;
+                });
+              },
+              activeThumbColor: AppTheme.primaryGreen,
             ),
-            _MenuItemData(
-              icon: Icons.language,
-              title: 'Language',
-              subtitle: _selectedLanguage,
-              onTap: () => _showLanguageSettings(context),
+          ),
+          _MenuItemData(
+            icon: Icons.language,
+            title: 'Language',
+            subtitle: _selectedLanguage,
+            onTap: () => _showLanguageSettings(context),
+          ),
+          _MenuItemData(
+            icon: Icons.fingerprint,
+            title: 'Biometric Login',
+            subtitle: _biometricEnabled ? 'Enabled' : 'Disabled',
+            onTap: () => _toggleBiometric(),
+            trailing: Switch(
+              value: _biometricEnabled,
+              onChanged: (value) => _toggleBiometric(),
+              activeThumbColor: AppTheme.primaryGreen,
             ),
-            _MenuItemData(
-              icon: Icons.fingerprint,
-              title: 'Biometric Login',
-              subtitle: _biometricEnabled ? 'Enabled' : 'Disabled',
-              onTap: () => _toggleBiometric(),
-              trailing: Switch(
-                value: _biometricEnabled,
-                onChanged: (value) => _toggleBiometric(),
-                activeThumbColor: AppTheme.primaryGreen,
-              ),
-            ),
-          ],
-        ),
+          ),
+        ]),
         const SizedBox(height: 24),
-        _buildMenuGroup(
-          'Account',
-          [
-            // Debug option - only show in debug mode
-            if (kDebugMode && AppConfig.enableDebugMode)
-              _MenuItemData(
-                icon: Icons.bug_report,
-                title: 'Generate Sample Users',
-                subtitle: 'Create test accounts for development',
-                onTap: () => _navigateToDebugScreen(context),
-                textColor: Colors.orange,
-              ),
+        _buildMenuGroup('Account', [
+          // Debug option - only show in debug mode
+          if (kDebugMode && AppConfig.enableDebugMode)
             _MenuItemData(
-              icon: Icons.logout,
-              title: 'Logout',
-              subtitle: 'Sign out of your account',
-              onTap: () => _logout(context),
-              textColor: Colors.red,
+              icon: Icons.bug_report,
+              title: 'Generate Sample Users',
+              subtitle: 'Create test accounts for development',
+              onTap: () => _navigateToDebugScreen(context),
+              textColor: Colors.orange,
             ),
-          ],
-        ),
+          _MenuItemData(
+            icon: Icons.logout,
+            title: 'Logout',
+            subtitle: 'Sign out of your account',
+            onTap: () => _logout(context),
+            textColor: Colors.red,
+          ),
+        ]),
       ],
     );
   }
 
   Widget _buildMenuGroup(String title, List<_MenuItemData> items) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              title,
-              style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-                color: AppTheme.darkGrey,
-              ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
+          child: Text(
+            title,
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+              color: AppTheme.darkGreen,
             ),
           ),
-          ...items.asMap().entries.map((entry) {
-            final index = entry.key;
-            final item = entry.value;
-            return Column(
-              children: [
-                if (index > 0)
-                  Divider(
-                    height: 1,
-                    indent: 16,
-                    endIndent: 16,
-                    color: AppTheme.lightGrey,
-                  ),
-                _buildMenuItem(item),
-              ],
-            );
-          }),
-        ],
-      ),
+        ),
+        Container(
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AppTheme.inputBorder),
+          ),
+          child: Column(
+            children: items.asMap().entries.map((entry) {
+              final index = entry.key;
+              final item = entry.value;
+              return Column(
+                children: [
+                  if (index > 0)
+                    Divider(
+                      height: 1,
+                      indent: 16,
+                      endIndent: 16,
+                      color: AppTheme.inputBorder,
+                    ),
+                  _buildMenuItem(item),
+                ],
+              );
+            }).toList(),
+          ),
+        ),
+      ],
     );
   }
 
   Widget _buildMenuItem(_MenuItemData item) {
     return ListTile(
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       leading: Container(
-        width: 40,
-        height: 40,
+        width: 36,
+        height: 36,
         decoration: BoxDecoration(
-          color: (item.textColor ?? AppTheme.primaryGreen).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(8),
+          color: (item.textColor ?? AppTheme.primaryGreen).withOpacity(0.1),
+          borderRadius: BorderRadius.circular(10),
         ),
         child: Icon(
           item.icon,
           color: item.textColor ?? AppTheme.primaryGreen,
-          size: 20,
+          size: 18,
         ),
       ),
       title: Text(
@@ -1076,20 +1128,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
         style: TextStyle(
           fontWeight: FontWeight.w600,
           color: item.textColor ?? AppTheme.darkGrey,
+          fontSize: 14,
         ),
       ),
-      subtitle: Text(
-        item.subtitle,
-        style: TextStyle(
-          color: AppTheme.grey,
-          fontSize: 12,
-        ),
-      ),
-      trailing: item.trailing ??
-          Icon(
-            Icons.chevron_right,
-            color: AppTheme.grey,
-          ),
+      subtitle: item.subtitle.isNotEmpty
+          ? Text(
+              item.subtitle,
+              style: const TextStyle(color: AppTheme.grey, fontSize: 12),
+            )
+          : null,
+      trailing:
+          item.trailing ??
+          const Icon(Icons.chevron_right, color: AppTheme.grey, size: 20),
       onTap: item.onTap,
     );
   }
@@ -1108,9 +1158,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => ProfileEditScreen(
-          profileData: _profileData,
-        ),
+        builder: (context) => ProfileEditScreen(profileData: _profileData),
       ),
     );
 
@@ -1134,7 +1182,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Add Money'),
-        content: const Text('Razorpay integration will be implemented for secure payments.'),
+        content: const Text(
+          'Razorpay integration will be implemented for secure payments.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1154,7 +1204,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Withdraw Money'),
-        content: const Text('Bank transfer functionality will be implemented with UPI integration.'),
+        content: const Text(
+          'Bank transfer functionality will be implemented with UPI integration.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1174,7 +1226,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Security Settings'),
-        content: const Text('Security features including 2FA, password change, and biometric authentication will be implemented.'),
+        content: const Text(
+          'Security features including 2FA, password change, and biometric authentication will be implemented.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1190,7 +1244,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Verification Status'),
-        content: const Text('KYC verification and document upload functionality will be implemented.'),
+        content: const Text(
+          'KYC verification and document upload functionality will be implemented.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1201,14 +1257,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-
-
   void _showNotificationSettings(BuildContext context) {
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Notification Settings'),
-        content: const Text('Granular notification controls for orders, payments, and blockchain events will be implemented.'),
+        content: const Text(
+          'Granular notification controls for orders, payments, and blockchain events will be implemented.',
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -1267,9 +1323,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          _biometricEnabled 
-            ? 'Biometric login enabled' 
-            : 'Biometric login disabled'
+          _biometricEnabled
+              ? 'Biometric login enabled'
+              : 'Biometric login disabled',
         ),
         backgroundColor: AppTheme.primaryGreen,
       ),
@@ -1279,9 +1335,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _navigateToDebugScreen(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const DebugSampleUsersScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const DebugSampleUsersScreen()),
     );
   }
 
@@ -1299,19 +1353,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(context);
-              
+
               try {
                 debugPrint('🔓 Starting logout process...');
-                
+
                 // Clear app state first
                 final appState = Provider.of<AppState>(context, listen: false);
                 appState.clearUser();
                 debugPrint('✅ App state cleared');
-                
+
                 // Sign out from Firebase - StreamBuilder will handle navigation
                 await FirebaseAuth.instance.signOut();
                 debugPrint('✅ Firebase signout complete');
-                
+
                 // Show success message
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
@@ -1334,9 +1388,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 }
               }
             },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.red,
-            ),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             child: const Text('Logout'),
           ),
         ],
@@ -1348,7 +1400,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final appState = Provider.of<AppState>(context, listen: false);
     final currentUser = appState.currentUser;
     if (currentUser == null) return;
-    
+
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1364,9 +1416,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showAllRatings(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(
-        builder: (context) => const AllRatingsScreen(),
-      ),
+      MaterialPageRoute(builder: (context) => const AllRatingsScreen()),
     );
   }
 
@@ -1510,10 +1560,7 @@ class _WalletDetailsSheet extends StatelessWidget {
                 ),
                 Text(
                   DateFormat('MMM dd, yyyy • hh:mm a').format(date),
-                  style: TextStyle(
-                    color: AppTheme.grey,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: AppTheme.grey, fontSize: 12),
                 ),
               ],
             ),

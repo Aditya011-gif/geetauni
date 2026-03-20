@@ -31,24 +31,25 @@ class AppState extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String? get error => _error;
   bool get isAuthenticated => _firebaseUser != null && _currentUser != null;
-  
+
   String get userName => _currentUser?.name ?? 'Guest';
   double get walletBalance => _currentUser?.walletBalance ?? 0.0;
   String? get userLocation => _currentUser?.location;
-  
+
   List<FirestoreCrop> get crops => _crops;
   List<FirestoreLoan> get loans => _loans;
   List<FirestoreOrder> get orders => _orders;
   List<FirestoreAuction> get auctions => _auctions;
   List<Rating> get ratings => _ratings;
   UserRatingStats? get userRatingStats => _userRatingStats;
-  
+
   // Filtered crop getters
-  List<FirestoreCrop> get myCrops => _currentUser?.userType == UserType.farmer 
+  List<FirestoreCrop> get myCrops => _currentUser?.userType == UserType.farmer
       ? _crops.where((crop) => crop.farmerId == _currentUser!.id).toList()
       : [];
-  
-  List<FirestoreCrop> get availableCrops => _currentUser?.userType != UserType.farmer 
+
+  List<FirestoreCrop> get availableCrops =>
+      _currentUser?.userType != UserType.farmer
       ? _crops.where((crop) => crop.isActive).toList()
       : _crops;
 
@@ -58,9 +59,9 @@ class AppState extends ChangeNotifier {
     try {
       // Listen to auth state changes
       _auth.authStateChanges().listen(_onAuthStateChanged);
-      
+
       // Mock data initialization removed to avoid permission errors
-      
+
       // Check if user is already signed in
       _firebaseUser = _auth.currentUser;
       if (_firebaseUser != null) {
@@ -92,29 +93,31 @@ class AppState extends ChangeNotifier {
   Future<void> _loadUserData(String firebaseUid) async {
     _setLoading(true);
     _clearError();
-    
+
     try {
       debugPrint('🔍 Loading user data for Firebase UID: $firebaseUid');
-      
+
       // Retry logic in case of race condition between signup and login
       Map<String, dynamic>? userData;
-      int retries = 3;
-      
+      int retries = 15;
+
       while (retries > 0 && userData == null) {
         userData = await _databaseService.getUserByFirebaseUid(firebaseUid);
         if (userData == null) {
-          debugPrint('⏳ User data not found, retrying... ($retries attempts left)');
+          debugPrint(
+            '⏳ User data not found, retrying... ($retries attempts left)',
+          );
           await Future.delayed(const Duration(seconds: 1));
           retries--;
         }
       }
-      
+
       if (userData != null) {
         debugPrint('✅ User data loaded successfully: ${userData['email']}');
         final userTypeString = userData['userType'] as String? ?? 'farmer';
         _currentUser = FirestoreUser(
           id: userData['id'] ?? '',
-          name: userData['firstName'] != null && userData['lastName'] != null 
+          name: userData['firstName'] != null && userData['lastName'] != null
               ? '${userData['firstName']} ${userData['lastName']}'
               : userData['name'] ?? '',
           email: userData['email'] ?? '',
@@ -126,19 +129,24 @@ class AppState extends ChangeNotifier {
           location: userData['location'],
           walletAddress: userData['walletAddress'],
           walletBalance: (userData['walletBalance'] ?? 0.0).toDouble(),
-          createdAt: userData['createdAt'] != null 
+          createdAt: userData['createdAt'] != null
               ? DateTime.parse(userData['createdAt'])
               : DateTime.now(),
-          updatedAt: userData['updatedAt'] != null 
+          updatedAt: userData['updatedAt'] != null
               ? DateTime.parse(userData['updatedAt'])
               : null,
           isActive: userData['isActive'] ?? true,
           metadata: Map<String, dynamic>.from(userData['metadata'] ?? {}),
+          signatureUrl: userData['signatureUrl'],
         );
         await _loadUserRelatedData();
-        debugPrint('✅ User profile loaded: ${_currentUser!.name} (${_currentUser!.userType.name})');
+        debugPrint(
+          '✅ User profile loaded: ${_currentUser!.name} (${_currentUser!.userType.name})',
+        );
       } else {
-        debugPrint('❌ User data not found after retries for Firebase UID: $firebaseUid');
+        debugPrint(
+          '❌ User data not found after retries for Firebase UID: $firebaseUid',
+        );
         _setError('User profile not found. Please complete your registration.');
       }
     } catch (e) {
@@ -152,24 +160,24 @@ class AppState extends ChangeNotifier {
   // Load user-related data
   Future<void> _loadUserRelatedData() async {
     if (_currentUser == null) return;
-    
+
     try {
       // Load crops based on user type
       final cropDataList = _currentUser!.userType == UserType.farmer
           ? await _databaseService.getCropsByFarmerId(_currentUser!.id)
           : await _databaseService.getAllAvailableCrops();
-      
+
       _crops = cropDataList.map((data) => _mapToFirestoreCrop(data)).toList();
-      
+
       // Load loans (placeholder - implement when loan methods are available)
       _loans = [];
-      
-      // Load orders (placeholder - implement when order methods are available)
-      _orders = [];
-      
+
+      // Load orders for the current user
+      await _loadOrders();
+
       // Load active auctions (placeholder - implement when auction methods are available)
       _auctions = [];
-      
+
       notifyListeners();
     } catch (e) {
       _setError('Failed to load user data: $e');
@@ -186,9 +194,11 @@ class AppState extends ChangeNotifier {
       location: data['location'] ?? '',
       price: (data['price'] ?? 0.0).toDouble(),
       quantity: data['quantity'] ?? '',
-      harvestDate: data['harvestDate'] is Timestamp 
+      harvestDate: data['harvestDate'] is Timestamp
           ? (data['harvestDate'] as Timestamp).toDate()
-          : DateTime.parse(data['harvestDate'] ?? DateTime.now().toIso8601String()),
+          : DateTime.parse(
+              data['harvestDate'] ?? DateTime.now().toIso8601String(),
+            ),
       imageUrl: data['imageUrl'] ?? '',
       description: data['description'] ?? '',
       isNFT: data['isNFT'] ?? false,
@@ -198,37 +208,41 @@ class AppState extends ChangeNotifier {
         orElse: () => BiddingType.fixedPrice,
       ),
       auctionId: data['auctionId'],
-      auctionEndTime: data['auctionEndTime'] != null 
-          ? (data['auctionEndTime'] is Timestamp 
-              ? (data['auctionEndTime'] as Timestamp).toDate()
-              : DateTime.parse(data['auctionEndTime']))
+      auctionEndTime: data['auctionEndTime'] != null
+          ? (data['auctionEndTime'] is Timestamp
+                ? (data['auctionEndTime'] as Timestamp).toDate()
+                : DateTime.parse(data['auctionEndTime']))
           : null,
       startingBid: data['startingBid']?.toDouble(),
       reservePrice: data['reservePrice']?.toDouble(),
-      cropType: data['cropType'] != null 
+      cropType: data['cropType'] != null
           ? CropType.values.firstWhere(
               (e) => e.name == data['cropType'],
               orElse: () => CropType.wheat,
             )
           : null,
-      category: data['category'] != null 
+      category: data['category'] != null
           ? CropCategory.values.firstWhere(
               (e) => e.name == data['category'],
               orElse: () => CropCategory.grains,
             )
           : null,
-      certifications: List<Map<String, dynamic>>.from(data['certifications'] ?? []),
+      certifications: List<Map<String, dynamic>>.from(
+        data['certifications'] ?? [],
+      ),
       qualityGrade: QualityGrade.values.firstWhere(
         (e) => e.name == data['qualityGrade'],
         orElse: () => QualityGrade.standard,
       ),
-      createdAt: data['createdAt'] is Timestamp 
+      createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
-          : DateTime.parse(data['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: data['updatedAt'] != null 
-          ? (data['updatedAt'] is Timestamp 
-              ? (data['updatedAt'] as Timestamp).toDate()
-              : DateTime.parse(data['updatedAt']))
+          : DateTime.parse(
+              data['createdAt'] ?? DateTime.now().toIso8601String(),
+            ),
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] is Timestamp
+                ? (data['updatedAt'] as Timestamp).toDate()
+                : DateTime.parse(data['updatedAt']))
           : null,
       isActive: data['isActive'] ?? true,
     );
@@ -247,7 +261,7 @@ class AppState extends ChangeNotifier {
   }) async {
     _setLoading(true);
     _clearError();
-    
+
     try {
       final result = await _authService.signUp(
         firstName: firstName,
@@ -259,7 +273,7 @@ class AppState extends ChangeNotifier {
         aadhaarNumber: aadhaarNumber,
         panNumber: panNumber,
       );
-      
+
       if (result.success) {
         // User data will be loaded automatically via auth state change
         return true;
@@ -275,19 +289,16 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  Future<bool> signIn({
-    required String email,
-    required String password,
-  }) async {
+  Future<bool> signIn({required String email, required String password}) async {
     _setLoading(true);
     _clearError();
-    
+
     try {
       final result = await _authService.signIn(
         email: email,
         password: password,
       );
-      
+
       if (result.success) {
         // User data will be loaded automatically via auth state change
         return true;
@@ -331,7 +342,7 @@ class AppState extends ChangeNotifier {
     BiddingType biddingType = BiddingType.fixedPrice,
   }) async {
     if (_currentUser == null) return false;
-    
+
     _setLoading(true);
     try {
       final crop = FirestoreCrop(
@@ -352,7 +363,7 @@ class AppState extends ChangeNotifier {
         qualityGrade: qualityGrade,
         createdAt: DateTime.now(),
       );
-      
+
       await _databaseService.createCrop(crop.toFirestore());
       await _loadUserRelatedData(); // Refresh data
       return true;
@@ -367,15 +378,15 @@ class AppState extends ChangeNotifier {
   // Wallet management
   Future<bool> updateWalletBalance(double newBalance) async {
     if (_currentUser == null) return false;
-    
+
     try {
       final updates = {
         'walletBalance': newBalance,
         'updatedAt': DateTime.now().toIso8601String(),
       };
-      
+
       await _databaseService.updateUser(_currentUser!.id, updates);
-      
+
       _currentUser = _currentUser!.copyWith(
         walletBalance: newBalance,
         updatedAt: DateTime.now(),
@@ -437,11 +448,11 @@ class AppState extends ChangeNotifier {
   // Search and filter methods
   List<FirestoreCrop> searchCrops(String query) {
     if (query.isEmpty) return _crops;
-    
+
     return _crops.where((crop) {
       return crop.name.toLowerCase().contains(query.toLowerCase()) ||
-             crop.farmerName.toLowerCase().contains(query.toLowerCase()) ||
-             crop.location.toLowerCase().contains(query.toLowerCase());
+          crop.farmerName.toLowerCase().contains(query.toLowerCase()) ||
+          crop.location.toLowerCase().contains(query.toLowerCase());
     }).toList();
   }
 
@@ -464,7 +475,9 @@ class AppState extends ChangeNotifier {
 
   List<Map<String, dynamic>> getBidsForAuction(String auctionId) {
     try {
-      final auction = _auctions.firstWhere((auction) => auction.id == auctionId);
+      final auction = _auctions.firstWhere(
+        (auction) => auction.id == auctionId,
+      );
       return auction.bids;
     } catch (e) {
       return [];
@@ -482,19 +495,21 @@ class AppState extends ChangeNotifier {
       }
 
       // Find the auction
-      final auctionIndex = _auctions.indexWhere((auction) => auction.id == auctionId);
+      final auctionIndex = _auctions.indexWhere(
+        (auction) => auction.id == auctionId,
+      );
       if (auctionIndex == -1) {
         throw Exception('Auction not found');
       }
 
       final auction = _auctions[auctionIndex];
-      
+
       // Validate bid amount
       final currentBids = auction.bids;
-      final currentHighestBid = currentBids.isNotEmpty 
+      final currentHighestBid = currentBids.isNotEmpty
           ? (currentBids.last['amount'] as num).toDouble()
           : auction.startingPrice;
-      
+
       if (bidAmount <= currentHighestBid) {
         throw Exception('Bid amount must be higher than current highest bid');
       }
@@ -508,8 +523,9 @@ class AppState extends ChangeNotifier {
       };
 
       // Update auction with new bid
-      final updatedBids = List<Map<String, dynamic>>.from(auction.bids)..add(newBid);
-      
+      final updatedBids = List<Map<String, dynamic>>.from(auction.bids)
+        ..add(newBid);
+
       final updatedAuction = FirestoreAuction(
         id: auction.id,
         cropId: auction.cropId,
@@ -527,7 +543,7 @@ class AppState extends ChangeNotifier {
 
       // Update local state
       _auctions[auctionIndex] = updatedAuction;
-      
+
       // Update user's wallet balance
       _currentUser = _currentUser!.copyWith(
         walletBalance: _currentUser!.walletBalance - bidAmount,
@@ -538,11 +554,10 @@ class AppState extends ChangeNotifier {
       // TODO: Update Firestore with new bid and user balance
       // await _databaseService.updateAuction(updatedAuction);
       // await _databaseService.updateUserWalletBalance(_currentUser!.id, _currentUser!.walletBalance);
-      
     } catch (e) {
-       throw Exception('Failed to place bid: $e');
-     }
-   }
+      throw Exception('Failed to place bid: $e');
+    }
+  }
 
   // Add a new order
   Future<void> addOrder(FirestoreOrder order) async {
@@ -551,11 +566,90 @@ class AppState extends ChangeNotifier {
       _orders.add(order);
       notifyListeners();
 
-      // TODO: Save order to Firestore
-      // await _databaseService.createOrder(order.toFirestore());
-      
+      // Reload orders from Firebase to get the updated list
+      await _loadOrders();
     } catch (e) {
       throw Exception('Failed to add order: $e');
+    }
+  }
+
+  // Load orders from Firebase
+  Future<void> _loadOrders() async {
+    if (_currentUser == null || _firebaseUser == null) return;
+
+    try {
+      final firestore = FirebaseFirestore.instance;
+      final ordersCollection = firestore.collection('orders');
+      final firebaseUid = _firebaseUser!.uid;
+
+      // Query using Firebase Auth UID (matches Firestore security rules)
+      final buyerOrders = await ordersCollection
+          .where('buyerId', isEqualTo: firebaseUid)
+          .get();
+
+      // Also try to get seller orders if user is a farmer
+      QuerySnapshot? sellerOrders;
+      try {
+        sellerOrders = await ordersCollection
+            .where('sellerId', isEqualTo: firebaseUid)
+            .get();
+      } catch (_) {
+        // sellerId field may not exist on older orders
+      }
+
+      // Combine and deduplicate orders
+      final allOrderDocs = <String, QueryDocumentSnapshot>{};
+      for (var doc in buyerOrders.docs) {
+        allOrderDocs[doc.id] = doc;
+      }
+      if (sellerOrders != null) {
+        for (var doc in sellerOrders.docs) {
+          allOrderDocs[doc.id] = doc;
+        }
+      }
+
+      // Convert to FirestoreOrder objects
+      _orders = allOrderDocs.values.map((doc) {
+        final data = doc.data() as Map<String, dynamic>;
+        return FirestoreOrder(
+          id: data['id'] ?? doc.id,
+          cropId: data['cropId'] ?? '',
+          quantity: data['quantity'] ?? '',
+          totalAmount: (data['totalAmount'] ?? 0.0).toDouble(),
+          buyerId: data['buyerId'] ?? '',
+          buyerName: data['buyerName'] ?? '',
+          sellerId: data['sellerId'] ?? '',
+          sellerName: data['sellerName'] ?? '',
+          status: OrderStatus.values.firstWhere(
+            (e) => e.name == data['status'],
+            orElse: () => OrderStatus.pending,
+          ),
+          orderDate: data['createdAt'] is Timestamp
+              ? (data['createdAt'] as Timestamp).toDate()
+              : DateTime.parse(
+                  data['createdAt'] ?? DateTime.now().toIso8601String(),
+                ),
+          createdAt: data['createdAt'] is Timestamp
+              ? (data['createdAt'] as Timestamp).toDate()
+              : DateTime.parse(
+                  data['createdAt'] ?? DateTime.now().toIso8601String(),
+                ),
+          updatedAt: data['updatedAt'] != null
+              ? (data['updatedAt'] is Timestamp
+                    ? (data['updatedAt'] as Timestamp).toDate()
+                    : DateTime.parse(data['updatedAt']))
+              : null,
+          metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
+        );
+      }).toList();
+
+      // Sort by creation date (newest first)
+      _orders.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint('❌ Error loading orders: $e');
+      // Don't throw, just log the error
     }
   }
 
@@ -573,7 +667,7 @@ class AppState extends ChangeNotifier {
     String? transactionId,
   }) async {
     if (_currentUser == null) return false;
-    
+
     _setLoading(true);
     try {
       final ratingData = {
@@ -587,17 +681,17 @@ class AppState extends ChangeNotifier {
         'orderId': transactionId,
         'metadata': <String, dynamic>{},
       };
-      
+
       final success = await _databaseService.addRating(ratingData);
-      
+
       if (success) {
         // Update local rating stats for the rated user
         await calculateRatingStats(toUserId);
-        
+
         // Refresh ratings data
         await _loadRatingData();
       }
-      
+
       return success;
     } catch (e) {
       _setError('Failed to add rating: $e');
@@ -608,13 +702,16 @@ class AppState extends ChangeNotifier {
   }
 
   /// Get ratings for a specific user
-  Future<List<Rating>> getRatingsForUser(String userId, {RatingType? ratingType}) async {
+  Future<List<Rating>> getRatingsForUser(
+    String userId, {
+    RatingType? ratingType,
+  }) async {
     try {
       final ratingsData = await _databaseService.getRatingsForUser(
-        userId, 
+        userId,
         ratingType: ratingType?.name,
       );
-      
+
       return ratingsData.map((data) => _mapToRating(data)).toList();
     } catch (e) {
       _setError('Failed to get ratings for user: $e');
@@ -626,14 +723,14 @@ class AppState extends ChangeNotifier {
   Future<UserRatingStats?> calculateRatingStats(String userId) async {
     try {
       await _databaseService.calculateRatingStats(userId);
-      
+
       // Get the updated stats
       final statsData = await _databaseService.getUserRatingStats(userId);
-      
+
       if (statsData != null) {
         return _mapToUserRatingStats(statsData);
       }
-      
+
       return null;
     } catch (e) {
       _setError('Failed to calculate rating stats: $e');
@@ -644,18 +741,22 @@ class AppState extends ChangeNotifier {
   /// Load rating data for the current user
   Future<void> _loadRatingData() async {
     if (_currentUser == null) return;
-    
+
     try {
       // Load ratings for current user
-      final ratingsData = await _databaseService.getRatingsForUser(_currentUser!.id);
+      final ratingsData = await _databaseService.getRatingsForUser(
+        _currentUser!.id,
+      );
       _ratings = ratingsData.map((data) => _mapToRating(data)).toList();
-      
+
       // Load rating stats for current user
-      final statsData = await _databaseService.getUserRatingStats(_currentUser!.id);
+      final statsData = await _databaseService.getUserRatingStats(
+        _currentUser!.id,
+      );
       if (statsData != null) {
         _userRatingStats = _mapToUserRatingStats(statsData);
       }
-      
+
       notifyListeners();
     } catch (e) {
       _setError('Failed to load rating data: $e');
@@ -672,20 +773,22 @@ class AppState extends ChangeNotifier {
       toUserName: data['toUserName'] ?? '',
       rating: (data['rating'] ?? 0.0).toDouble(),
       review: data['review'],
-      ratingType: data['ratingType'] != null 
+      ratingType: data['ratingType'] != null
           ? RatingType.values.firstWhere(
               (e) => e.name == data['ratingType'],
               orElse: () => RatingType.overall,
             )
           : null,
       orderId: data['orderId'],
-      createdAt: data['createdAt'] is Timestamp 
+      createdAt: data['createdAt'] is Timestamp
           ? (data['createdAt'] as Timestamp).toDate()
-          : DateTime.parse(data['createdAt'] ?? DateTime.now().toIso8601String()),
-      updatedAt: data['updatedAt'] != null 
-          ? (data['updatedAt'] is Timestamp 
-              ? (data['updatedAt'] as Timestamp).toDate()
-              : DateTime.parse(data['updatedAt']))
+          : DateTime.parse(
+              data['createdAt'] ?? DateTime.now().toIso8601String(),
+            ),
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] is Timestamp
+                ? (data['updatedAt'] as Timestamp).toDate()
+                : DateTime.parse(data['updatedAt']))
           : null,
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
     );
@@ -718,9 +821,11 @@ class AppState extends ChangeNotifier {
       threeStarCount: data['threeStarCount'] ?? 0,
       twoStarCount: data['twoStarCount'] ?? 0,
       oneStarCount: data['oneStarCount'] ?? 0,
-      lastUpdated: data['lastUpdated'] is Timestamp 
+      lastUpdated: data['lastUpdated'] is Timestamp
           ? (data['lastUpdated'] as Timestamp).toDate()
-          : DateTime.parse(data['lastUpdated'] ?? DateTime.now().toIso8601String()),
+          : DateTime.parse(
+              data['lastUpdated'] ?? DateTime.now().toIso8601String(),
+            ),
     );
   }
 

@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
@@ -68,12 +69,34 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
   final List<String> _certificateImages = [];
   final ImagePicker _picker = ImagePicker();
 
-  final List<String> _cropCategories = ['Grains', 'Vegetables', 'Fruits', 'Pulses', 'Spices', 'Cash Crops'];
+  final List<String> _cropCategories = [
+    'Grains',
+    'Vegetables',
+    'Fruits',
+    'Pulses',
+    'Spices',
+    'Cash Crops',
+  ];
   final List<String> _units = ['Kg', 'Quintal', 'Ton', 'Pieces', 'Bundles'];
-  final List<String> _growingMethods = ['Conventional', 'Organic', 'Hydroponic', 'Greenhouse'];
-  final List<String> _harvestMethods = ['Manual', 'Mechanical', 'Semi-Mechanical'];
+  final List<String> _growingMethods = [
+    'Conventional',
+    'Organic',
+    'Hydroponic',
+    'Greenhouse',
+  ];
+  final List<String> _harvestMethods = [
+    'Manual',
+    'Mechanical',
+    'Semi-Mechanical',
+  ];
   final List<String> _qualityGrades = ['A', 'B', 'C', 'Premium', 'Standard'];
-  final List<String> _certificationTypes = ['Organic', 'Fair Trade', 'GlobalGAP', 'FSSAI', 'ISO'];
+  final List<String> _certificationTypes = [
+    'Organic',
+    'Fair Trade',
+    'GlobalGAP',
+    'FSSAI',
+    'ISO',
+  ];
 
   @override
   void dispose() {
@@ -145,7 +168,9 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
               margin: const EdgeInsets.symmetric(horizontal: 2),
               height: 4,
               decoration: BoxDecoration(
-                color: index <= _currentStep ? AppTheme.primaryGreen : Colors.grey[300],
+                color: index <= _currentStep
+                    ? AppTheme.primaryGreen
+                    : Colors.grey[300],
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -168,14 +193,15 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
               style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 16),
-            
+
             _buildTextField(
               controller: _cropNameController,
               label: 'Crop Name',
               hint: 'Enter crop name (e.g., Rice, Wheat, Tomato)',
-              validator: (value) => value?.isEmpty == true ? 'Crop name is required' : null,
+              validator: (value) =>
+                  value?.isEmpty == true ? 'Crop name is required' : null,
             ),
-            
+
             Row(
               children: [
                 Expanded(
@@ -183,7 +209,8 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
                     controller: _varietyController,
                     label: 'Variety',
                     hint: 'Crop variety',
-                    validator: (value) => value?.isEmpty == true ? 'Variety is required' : null,
+                    validator: (value) =>
+                        value?.isEmpty == true ? 'Variety is required' : null,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -192,12 +219,13 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
                     label: 'Category',
                     value: _selectedCropCategory,
                     items: _cropCategories,
-                    onChanged: (value) => setState(() => _selectedCropCategory = value!),
+                    onChanged: (value) =>
+                        setState(() => _selectedCropCategory = value!),
                   ),
                 ),
               ],
             ),
-            
+
             Row(
               children: [
                 Expanded(
@@ -207,7 +235,8 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
                     label: 'Quantity',
                     hint: 'Total quantity',
                     keyboardType: TextInputType.number,
-                    validator: (value) => value?.isEmpty == true ? 'Quantity is required' : null,
+                    validator: (value) =>
+                        value?.isEmpty == true ? 'Quantity is required' : null,
                   ),
                 ),
                 const SizedBox(width: 16),
@@ -216,79 +245,83 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
                     label: 'Unit',
                     value: _selectedUnit,
                     items: _units,
-                    onChanged: (value) => setState(() => _selectedUnit = value!),
+                    onChanged: (value) =>
+                        setState(() => _selectedUnit = value!),
                   ),
                 ),
               ],
             ),
-            
+
             _buildTextField(
               controller: _farmLocationController,
               label: 'Farm Location',
               hint: 'Complete farm address',
-              validator: (value) => value?.isEmpty == true ? 'Farm location is required' : null,
+              validator: (value) =>
+                  value?.isEmpty == true ? 'Farm location is required' : null,
             ),
-            
+
             _buildTextField(
               controller: _farmSizeController,
               label: 'Farm Size (Acres)',
               hint: 'Size of farm in acres',
               keyboardType: TextInputType.number,
-              validator: (value) => value?.isEmpty == true ? 'Farm size is required' : null,
+              validator: (value) =>
+                  value?.isEmpty == true ? 'Farm size is required' : null,
             ),
-            
+
             _buildDateField(
               label: 'Planting Date',
               selectedDate: _plantingDate,
               onDateSelected: (date) => setState(() => _plantingDate = date),
             ),
-            
+
             _buildDropdown(
               label: 'Growing Method',
               value: _selectedGrowingMethod,
               items: _growingMethods,
-              onChanged: (value) => setState(() => _selectedGrowingMethod = value!),
+              onChanged: (value) =>
+                  setState(() => _selectedGrowingMethod = value!),
             ),
-            
+
             _buildTextField(
               controller: _seedSourceController,
               label: 'Seed Source',
               hint: 'Source of seeds used',
             ),
-            
+
             _buildTextField(
               controller: _fertilizersController,
               label: 'Fertilizers Used',
               hint: 'List of fertilizers (comma separated)',
               maxLines: 2,
             ),
-            
+
             _buildTextField(
               controller: _pesticidesController,
               label: 'Pesticides Used',
               hint: 'List of pesticides (comma separated)',
               maxLines: 2,
             ),
-            
+
             _buildTextField(
               controller: _irrigationMethodController,
               label: 'Irrigation Method',
               hint: 'Method of irrigation used',
             ),
-            
+
             _buildTextField(
               controller: _soilTypeController,
               label: 'Soil Type',
               hint: 'Type of soil (e.g., Clay, Sandy, Loamy)',
             ),
-            
+
             _buildTextField(
               controller: _weatherConditionsController,
               label: 'Weather Conditions',
               hint: 'Weather conditions during growing period',
               maxLines: 2,
             ),
-            
+
             SwitchListTile(
               title: const Text('Organic Crop'),
               subtitle: const Text('Is this an organically grown crop?'),
@@ -313,28 +346,30 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           _buildDateField(
             label: 'Harvest Date',
             selectedDate: _harvestDate,
             onDateSelected: (date) => setState(() => _harvestDate = date),
           ),
-          
+
           _buildTextField(
             controller: _harvestQuantityController,
             label: 'Harvest Quantity',
             hint: 'Actual harvested quantity',
             keyboardType: TextInputType.number,
-            validator: (value) => value?.isEmpty == true ? 'Harvest quantity is required' : null,
+            validator: (value) =>
+                value?.isEmpty == true ? 'Harvest quantity is required' : null,
           ),
-          
+
           _buildDropdown(
             label: 'Harvest Method',
             value: _selectedHarvestMethod,
             items: _harvestMethods,
-            onChanged: (value) => setState(() => _selectedHarvestMethod = value!),
+            onChanged: (value) =>
+                setState(() => _selectedHarvestMethod = value!),
           ),
-          
+
           Row(
             children: [
               Expanded(
@@ -350,32 +385,33 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
                   label: 'Quality Grade',
                   value: _selectedQualityGrade,
                   items: _qualityGrades,
-                  onChanged: (value) => setState(() => _selectedQualityGrade = value!),
+                  onChanged: (value) =>
+                      setState(() => _selectedQualityGrade = value!),
                 ),
               ),
             ],
           ),
-          
+
           _buildTextField(
             controller: _moistureContentController,
             label: 'Moisture Content (%)',
             hint: 'Moisture content percentage',
             keyboardType: TextInputType.number,
           ),
-          
+
           _buildTextField(
             controller: _storageConditionsController,
             label: 'Storage Conditions',
             hint: 'Current storage conditions',
             maxLines: 2,
           ),
-          
+
           _buildTextField(
             controller: _packagingDetailsController,
             label: 'Packaging Details',
             hint: 'Type of packaging used',
           ),
-          
+
           _buildTextField(
             controller: _expectedShelfLifeController,
             label: 'Expected Shelf Life (Days)',
@@ -398,7 +434,7 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           SwitchListTile(
             title: const Text('Has Quality Tests'),
             subtitle: const Text('Have quality tests been conducted?'),
@@ -406,35 +442,39 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
             onChanged: (value) => setState(() => _hasQualityTests = value),
             activeThumbColor: AppTheme.primaryGreen,
           ),
-          
+
           if (_hasQualityTests) ...[
             _buildTextField(
               controller: _testingLabController,
               label: 'Testing Laboratory',
               hint: 'Name of testing laboratory',
-              validator: (value) => _hasQualityTests && (value?.isEmpty == true) ? 'Testing lab is required' : null,
+              validator: (value) => _hasQualityTests && (value?.isEmpty == true)
+                  ? 'Testing lab is required'
+                  : null,
             ),
-            
+
             _buildTextField(
               controller: _labReportNumberController,
               label: 'Lab Report Number',
               hint: 'Laboratory report number',
-              validator: (value) => _hasQualityTests && (value?.isEmpty == true) ? 'Lab report number is required' : null,
+              validator: (value) => _hasQualityTests && (value?.isEmpty == true)
+                  ? 'Lab report number is required'
+                  : null,
             ),
-            
+
             _buildDateField(
               label: 'Testing Date',
               selectedDate: _testingDate,
               onDateSelected: (date) => setState(() => _testingDate = date),
             ),
-            
+
             _buildTextField(
               controller: _nutritionalValueController,
               label: 'Nutritional Value',
               hint: 'Key nutritional components (comma separated)',
               maxLines: 3,
             ),
-            
+
             _buildTextField(
               controller: _contaminantLevelsController,
               label: 'Contaminant Levels',
@@ -442,26 +482,27 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
               maxLines: 2,
             ),
           ],
-          
+
           _buildTextField(
             controller: _certificationBodyController,
             label: 'Certification Body',
             hint: 'Name of certification body',
           ),
-          
+
           _buildDropdown(
             label: 'Certification Type',
             value: _selectedCertificationType,
             items: _certificationTypes,
-            onChanged: (value) => setState(() => _selectedCertificationType = value!),
+            onChanged: (value) =>
+                setState(() => _selectedCertificationType = value!),
           ),
-          
+
           _buildTextField(
             controller: _certificateNumberController,
             label: 'Certificate Number',
             hint: 'Certification number',
           ),
-          
+
           _buildDateField(
             label: 'Certification Date',
             selectedDate: _certificationDate,
@@ -483,14 +524,14 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           // Crop Images Section
           const Text(
             'Crop Images',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          
+
           ElevatedButton.icon(
             onPressed: () => _pickImages(true),
             icon: const Icon(Icons.add_photo_alternate),
@@ -501,33 +542,33 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           if (_cropImages.isNotEmpty) ...[
             const Text(
               'Crop Photos:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
-            
+
             _buildImageGrid(_cropImages, true),
             const SizedBox(height: 24),
           ],
-          
+
           // Certificate Images Section
           const Text(
             'Certificates & Reports',
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 8),
-          
+
           const Text(
             'Upload quality certificates, lab reports, and organic certifications:',
             style: TextStyle(fontSize: 14, color: Colors.grey),
           ),
           const SizedBox(height: 8),
-          
+
           ElevatedButton.icon(
             onPressed: () => _pickImages(false),
             icon: const Icon(Icons.add_photo_alternate),
@@ -538,16 +579,16 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
             ),
           ),
-          
+
           const SizedBox(height: 16),
-          
+
           if (_certificateImages.isNotEmpty) ...[
             const Text(
               'Certificates:',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
             ),
             const SizedBox(height: 8),
-            
+
             _buildImageGrid(_certificateImages, false),
           ],
         ],
@@ -575,12 +616,19 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
               ),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(8),
-                child: Image.file(
-                  File(images[index]),
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                ),
+                child: kIsWeb
+                    ? Image.network(
+                        images[index],
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      )
+                    : Image.file(
+                        File(images[index]),
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                      ),
               ),
             ),
             Positioned(
@@ -594,11 +642,7 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
                     color: Colors.red,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 16,
-                  ),
+                  child: const Icon(Icons.close, color: Colors.white, size: 16),
                 ),
               ),
             ),
@@ -619,7 +663,7 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
             style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
-          
+
           _buildReviewSection('Crop Information', [
             'Crop: ${_cropNameController.text}',
             'Variety: ${_varietyController.text}',
@@ -629,7 +673,7 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
             'Growing Method: $_selectedGrowingMethod',
             'Organic: ${_isOrganic ? "Yes" : "No"}',
           ]),
-          
+
           _buildReviewSection('Harvest Details', [
             'Harvest Date: ${_harvestDate.toLocal().toString().split(' ')[0]}',
             'Harvest Quantity: ${_harvestQuantityController.text}',
@@ -637,36 +681,35 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
             'Quality Grade: $_selectedQualityGrade',
             'Moisture Content: ${_moistureContentController.text}%',
           ]),
-          
+
           _buildReviewSection('Quality Assurance', [
             'Has Quality Tests: ${_hasQualityTests ? "Yes" : "No"}',
             if (_hasQualityTests) 'Testing Lab: ${_testingLabController.text}',
-            if (_hasQualityTests) 'Lab Report: ${_labReportNumberController.text}',
+            if (_hasQualityTests)
+              'Lab Report: ${_labReportNumberController.text}',
             'Certification Type: $_selectedCertificationType',
             'Certificate Number: ${_certificateNumberController.text}',
           ]),
-          
+
           _buildReviewSection('Documents', [
             'Crop Photos: ${_cropImages.length}',
             'Certificates: ${_certificateImages.length}',
           ]),
-          
+
           const SizedBox(height: 24),
-          
+
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: AppTheme.primaryGreen.withValues(alpha: 0.1),
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: AppTheme.primaryGreen.withValues(alpha: 0.3)),
+              border: Border.all(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+              ),
             ),
             child: const Column(
               children: [
-                Icon(
-                  Icons.agriculture,
-                  color: AppTheme.primaryGreen,
-                  size: 32,
-                ),
+                Icon(Icons.agriculture, color: AppTheme.primaryGreen, size: 32),
                 SizedBox(height: 8),
                 Text(
                   'Crop NFT Minting',
@@ -680,10 +723,7 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
                 Text(
                   'Your crop will be tokenized as an NFT on the blockchain, providing immutable proof of quality and enabling it to be used as collateral for microloans.',
                   textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: AppTheme.darkGreen,
-                    fontSize: 14,
-                  ),
+                  style: TextStyle(color: AppTheme.darkGreen, fontSize: 14),
                 ),
               ],
             ),
@@ -706,19 +746,17 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
         children: [
           Text(
             title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
-            ),
+            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
-          ...items.where((item) => item.isNotEmpty).map((item) => Padding(
-            padding: const EdgeInsets.only(bottom: 4),
-            child: Text(
-              item,
-              style: const TextStyle(fontSize: 14),
-            ),
-          )),
+          ...items
+              .where((item) => item.isNotEmpty)
+              .map(
+                (item) => Padding(
+                  padding: const EdgeInsets.only(bottom: 4),
+                  child: Text(item, style: const TextStyle(fontSize: 14)),
+                ),
+              ),
         ],
       ),
     );
@@ -742,9 +780,7 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
         decoration: InputDecoration(
           labelText: label,
           hintText: hint,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.primaryGreen),
@@ -767,19 +803,14 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
         onChanged: onChanged,
         decoration: InputDecoration(
           labelText: label,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
           focusedBorder: OutlineInputBorder(
             borderRadius: BorderRadius.circular(8),
             borderSide: const BorderSide(color: AppTheme.primaryGreen),
           ),
         ),
         items: items.map((item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
-          );
+          return DropdownMenuItem<String>(value: item, child: Text(item));
         }).toList(),
       ),
     );
@@ -807,9 +838,7 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
         child: InputDecorator(
           decoration: InputDecoration(
             labelText: label,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(8),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
               borderSide: const BorderSide(color: AppTheme.primaryGreen),
@@ -896,7 +925,7 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
       case 2:
         if (_hasQualityTests) {
           return _testingLabController.text.isNotEmpty &&
-                 _labReportNumberController.text.isNotEmpty;
+              _labReportNumberController.text.isNotEmpty;
         }
         return true;
       case 3:
@@ -960,14 +989,18 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
         farmingMethod: _selectedGrowingMethod,
         plantingDate: _plantingDate,
         seedSource: _seedSourceController.text,
-        fertilizersUsed: _fertilizersController.text.split(',').map((e) => e.trim()).toList(),
-        pesticidesUsed: _pesticidesController.text.split(',').map((e) => e.trim()).toList(),
+        fertilizersUsed: _fertilizersController.text
+            .split(',')
+            .map((e) => e.trim())
+            .toList(),
+        pesticidesUsed: _pesticidesController.text
+            .split(',')
+            .map((e) => e.trim())
+            .toList(),
         irrigationMethod: _irrigationMethodController.text,
         farmAreaUsed: double.parse(_farmSizeController.text),
         soilType: _soilTypeController.text,
-        weatherConditions: {
-          'description': _weatherConditionsController.text,
-        },
+        weatherConditions: {'description': _weatherConditionsController.text},
       );
 
       // Create harvest data
@@ -975,16 +1008,20 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
         harvestDate: _harvestDate,
         quantity: double.parse(_harvestQuantityController.text),
         unit: _selectedUnit,
-        yieldPerAcre: double.tryParse(_farmSizeController.text) != null 
-            ? double.parse(_harvestQuantityController.text) / double.parse(_farmSizeController.text)
+        yieldPerAcre: double.tryParse(_farmSizeController.text) != null
+            ? double.parse(_harvestQuantityController.text) /
+                  double.parse(_farmSizeController.text)
             : 0.0,
         estimatedValue: 0.0, // Will be calculated based on market rates
         storageLocation: _storageConditionsController.text,
         storageMethod: _selectedHarvestMethod,
-        expiryDate: DateTime.now().add(Duration(days: int.tryParse(_expectedShelfLifeController.text) ?? 30)),
+        expiryDate: DateTime.now().add(
+          Duration(days: int.tryParse(_expectedShelfLifeController.text) ?? 30),
+        ),
         harvestImages: [],
         nutritionalInfo: {
-          'moistureContent': double.tryParse(_moistureContentController.text) ?? 0.0,
+          'moistureContent':
+              double.tryParse(_moistureContentController.text) ?? 0.0,
           'grade': _gradeController.text,
           'qualityGrade': _selectedQualityGrade,
         },
@@ -995,8 +1032,12 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
       final qualityAssurance = QualityAssurance(
         qualityGrade: _selectedQualityGrade,
         isOrganicCertified: _selectedCertificationType == 'Organic',
-        organicCertificationBody: _certificationBodyController.text.isNotEmpty ? _certificationBodyController.text : null,
-        organicCertificateNumber: _certificateNumberController.text.isNotEmpty ? _certificateNumberController.text : null,
+        organicCertificationBody: _certificationBodyController.text.isNotEmpty
+            ? _certificationBodyController.text
+            : null,
+        organicCertificateNumber: _certificateNumberController.text.isNotEmpty
+            ? _certificateNumberController.text
+            : null,
         qualityTests: [], // Will be populated by NFT service
         thirdPartyInspection: _hasQualityTests ? 'Yes' : null,
         inspectionDate: _hasQualityTests ? _testingDate : null,
@@ -1012,7 +1053,8 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
       final result = await NFTService.mintCropNFT(
         ownerFirebaseUid: user.id,
         ownerName: user.name,
-        ownerAddress: user.walletAddress ?? '0x${user.name.hashCode.toRadixString(16)}',
+        ownerAddress:
+            user.walletAddress ?? '0x${user.name.hashCode.toRadixString(16)}',
         cropDetails: cropDetails,
         harvestData: harvestData,
         qualityAssurance: qualityAssurance,
@@ -1024,7 +1066,9 @@ class _MintCropNFTScreenState extends State<MintCropNFTScreen> {
           Navigator.pop(context);
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('Crop NFT minted successfully! Token ID: ${result['tokenId']}'),
+              content: Text(
+                'Crop NFT minted successfully! Token ID: ${result['tokenId']}',
+              ),
               backgroundColor: AppTheme.primaryGreen,
               duration: const Duration(seconds: 5),
             ),

@@ -5,6 +5,9 @@ import '../providers/app_state.dart';
 import '../models/firestore_models.dart';
 import '../widgets/shimmer_loading.dart';
 import '../widgets/enhanced_loan_request_dialog.dart';
+import '../services/download_service.dart';
+import '../services/contract_pdf_service.dart';
+import '../services/database_service.dart';
 
 class LoansScreen extends StatefulWidget {
   const LoansScreen({super.key});
@@ -17,6 +20,7 @@ class _LoansScreenState extends State<LoansScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final DownloadService _downloadService = DownloadService();
 
   @override
   void initState() {
@@ -35,7 +39,7 @@ class _LoansScreenState extends State<LoansScreen>
     return Consumer<AppState>(
       builder: (context, appState, child) {
         final isFarmer = appState.currentUser?.userType == UserType.farmer;
-        
+
         return Scaffold(
           backgroundColor: const Color(0xFFF8F9FA),
           appBar: AppBar(
@@ -68,7 +72,9 @@ class _LoansScreenState extends State<LoansScreen>
           body: TabBarView(
             controller: _tabController,
             children: [
-              isFarmer ? _buildMyLoanRequestsTab() : _buildBrowseLoanRequestsTab(),
+              isFarmer
+                  ? _buildMyLoanRequestsTab()
+                  : _buildBrowseLoanRequestsTab(),
               isFarmer ? _buildLoanOffersTab() : _buildMyOffersTab(),
             ],
           ),
@@ -94,7 +100,7 @@ class _LoansScreenState extends State<LoansScreen>
         // Debug: Print current user ID
         print('DEBUG: Current user ID: ${appState.currentUser?.id}');
         print('DEBUG: Current user type: ${appState.currentUser?.userType}');
-        
+
         return StreamBuilder<QuerySnapshot>(
           stream: _firestore
               .collection('loan_requests')
@@ -109,13 +115,15 @@ class _LoansScreenState extends State<LoansScreen>
               print('DEBUG: Number of docs: ${snapshot.data!.docs.length}');
               for (var doc in snapshot.data!.docs) {
                 final data = doc.data() as Map<String, dynamic>;
-                print('DEBUG: Loan request - ID: ${doc.id}, farmerId: ${data['farmerId']}, status: ${data['status']}');
+                print(
+                  'DEBUG: Loan request - ID: ${doc.id}, farmerId: ${data['farmerId']}, status: ${data['status']}',
+                );
               }
             }
             if (snapshot.hasError) {
               print('DEBUG: Query error: ${snapshot.error}');
             }
-            
+
             if (snapshot.connectionState == ConnectionState.waiting) {
               return _buildLoadingGrid();
             }
@@ -258,7 +266,10 @@ class _LoansScreenState extends State<LoansScreen>
     );
   }
 
-  Widget _buildLoanRequestCard(Map<String, dynamic> data, {required bool isOwner}) {
+  Widget _buildLoanRequestCard(
+    Map<String, dynamic> data, {
+    required bool isOwner,
+  }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -272,7 +283,10 @@ class _LoansScreenState extends State<LoansScreen>
               children: [
                 Flexible(
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(data['status'] ?? 'active'),
                       borderRadius: BorderRadius.circular(12),
@@ -293,7 +307,10 @@ class _LoansScreenState extends State<LoansScreen>
                 if (data['urgency'] == 'high')
                   Flexible(
                     child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.red,
                         borderRadius: BorderRadius.circular(12),
@@ -388,6 +405,20 @@ class _LoansScreenState extends State<LoansScreen>
               ),
             ],
             const SizedBox(height: 16),
+            // Download Loan Contract action (available to both roles)
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _downloadLoanContract(data),
+                icon: const Icon(Icons.download, size: 16),
+                label: const Text('Loan Contract'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF2E7D32),
+                  side: const BorderSide(color: Color(0xFF2E7D32)),
+                ),
+              ),
+            ),
+            const SizedBox(height: 8),
             if (!isOwner)
               SizedBox(
                 width: double.infinity,
@@ -410,7 +441,10 @@ class _LoansScreenState extends State<LoansScreen>
     );
   }
 
-  Widget _buildLoanOfferCard(Map<String, dynamic> data, {required bool isReceiver}) {
+  Widget _buildLoanOfferCard(
+    Map<String, dynamic> data, {
+    required bool isReceiver,
+  }) {
     return Card(
       margin: const EdgeInsets.only(bottom: 16),
       elevation: 2,
@@ -425,7 +459,10 @@ class _LoansScreenState extends State<LoansScreen>
                 Flexible(
                   flex: 1,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: _getStatusColor(data['status'] ?? 'pending'),
                       borderRadius: BorderRadius.circular(12),
@@ -446,7 +483,9 @@ class _LoansScreenState extends State<LoansScreen>
                 Flexible(
                   flex: 2,
                   child: Text(
-                    isReceiver ? 'From: ${data['buyerName']}' : 'To: ${data['farmerName']}',
+                    isReceiver
+                        ? 'From: ${data['buyerName']}'
+                        : 'To: ${data['farmerName']}',
                     style: const TextStyle(
                       fontWeight: FontWeight.w500,
                       color: Color(0xFF2E7D32),
@@ -499,7 +538,8 @@ class _LoansScreenState extends State<LoansScreen>
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _updateOfferStatus(data['id'], 'accepted'),
+                      onPressed: () =>
+                          _updateOfferStatus(data['id'], 'accepted'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: const Color(0xFF2E7D32),
                         foregroundColor: Colors.white,
@@ -518,7 +558,8 @@ class _LoansScreenState extends State<LoansScreen>
                   const SizedBox(width: 8),
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () => _updateOfferStatus(data['id'], 'rejected'),
+                      onPressed: () =>
+                          _updateOfferStatus(data['id'], 'rejected'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.red,
                         foregroundColor: Colors.white,
@@ -536,10 +577,159 @@ class _LoansScreenState extends State<LoansScreen>
                   ),
                 ],
               ),
+            // Download Loan Contract action (always visible)
+            const SizedBox(height: 8),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: () => _downloadLoanContract(data),
+                icon: const Icon(Icons.download, size: 16),
+                label: const Text('Loan Contract'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: const Color(0xFF2E7D32),
+                  side: const BorderSide(color: Color(0xFF2E7D32)),
+                ),
+              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _downloadLoanContract(Map<String, dynamic> data) async {
+    try {
+      // Show loading indicator
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => const AlertDialog(
+          content: Row(
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(width: 16),
+              Text('Preparing loan contract...'),
+            ],
+          ),
+        ),
+      );
+
+      // Fetch borrower and lender details
+      String? borrowerSignatureUrl;
+      String? lenderSignatureUrl;
+
+      // Borrower (Farmer)
+      if (data['farmerId'] != null) {
+        try {
+          final farmerDoc = await DatabaseService().getUserById(
+            data['farmerId'],
+          );
+          if (farmerDoc != null) {
+            borrowerSignatureUrl = farmerDoc['signatureUrl'];
+          }
+        } catch (e) {
+          debugPrint('Error fetching borrower signature: $e');
+        }
+      }
+
+      // Lender (Buyer)
+      if (data['buyerId'] != null) {
+        try {
+          final buyerDoc = await DatabaseService().getUserById(data['buyerId']);
+          if (buyerDoc != null) {
+            lenderSignatureUrl = buyerDoc['signatureUrl'];
+          }
+        } catch (e) {
+          debugPrint('Error fetching lender signature: $e');
+        }
+      }
+
+      // Generate loan agreement bytes
+      final bytes = await ContractPdfService.generateLoanAgreement(
+        agreementId:
+            (data['id'] ?? 'AGL-${DateTime.now().millisecondsSinceEpoch}')
+                .toString(),
+        borrowerName: (data['farmerName'] ?? data['borrowerName'] ?? 'Borrower')
+            .toString(),
+        lenderName: (data['buyerName'] ?? data['lenderName'] ?? 'Lender')
+            .toString(),
+        loanAmount:
+            (num.tryParse(
+                      (data['loanAmount'] ?? data['offeredAmount'] ?? '0')
+                          .toString(),
+                    ) ??
+                    0)
+                .toDouble(),
+        interestRate: (data['interestRate'] ?? data['expectedROI'] ?? 'N/A')
+            .toString(),
+        repaymentPeriod: (data['repaymentPeriod'] ?? 'N/A').toString(),
+        purpose: (data['purpose'] ?? 'Agriculture input financing').toString(),
+        collateralNFT: (data['collateral'] ?? data['collateralNFT'])
+            ?.toString(),
+        borrowerSignatureUrl: borrowerSignatureUrl,
+        lenderSignatureUrl: lenderSignatureUrl,
+      );
+
+      final doc = DocumentInfo(
+        id: 'loan_agreement',
+        title: 'Loan Agreement',
+        description: 'Agrichain loan agreement contract',
+        fileName: 'AgriChain_Loan_Agreement.pdf',
+        filePath: '',
+        icon: Icons.account_balance,
+        color: const Color(0xFF2E7D32),
+        estimatedSize: '1.8 MB',
+        contentBytes: bytes,
+      );
+
+      double progress = 0.0;
+      final result = await _downloadService.downloadDocument(
+        doc,
+        onProgress: (p) => progress = p,
+      );
+
+      // Close loading dialog
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+
+      if (result.success) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.check_circle, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text('Loan contract saved to ${result.filePath}'),
+                ),
+              ],
+            ),
+            backgroundColor: const Color(0xFF2E7D32),
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(result.errorMessage ?? 'Failed to download contract'),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 3),
+          ),
+        );
+      }
+    } catch (e) {
+      if (Navigator.canPop(context)) {
+        Navigator.pop(context);
+      }
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: Colors.red,
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
   }
 
   Widget _buildInfoItem(String label, String value, IconData icon) {
@@ -605,11 +795,7 @@ class _LoansScreenState extends State<LoansScreen>
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            icon,
-            size: 80,
-            color: Colors.grey[400],
-          ),
+          Icon(icon, size: 80, color: Colors.grey[400]),
           const SizedBox(height: 16),
           Text(
             title,
@@ -622,10 +808,7 @@ class _LoansScreenState extends State<LoansScreen>
           const SizedBox(height: 8),
           Text(
             subtitle,
-            style: const TextStyle(
-              fontSize: 14,
-              color: Colors.grey,
-            ),
+            style: const TextStyle(fontSize: 14, color: Colors.grey),
             textAlign: TextAlign.center,
           ),
         ],
@@ -658,7 +841,7 @@ class _LoansScreenState extends State<LoansScreen>
       builder: (context) => const EnhancedLoanRequestDialog(),
     );
   }
-  
+
   Widget _buildSectionHeader(String title) {
     return Text(
       title,
@@ -669,7 +852,7 @@ class _LoansScreenState extends State<LoansScreen>
       ),
     );
   }
-  
+
   Widget _buildAnimatedTextField({
     required TextEditingController controller,
     required String label,
@@ -704,12 +887,15 @@ class _LoansScreenState extends State<LoansScreen>
           ),
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
       ),
     );
   }
-  
+
   Widget _buildAnimatedDropdown({
     required String value,
     required String label,
@@ -738,13 +924,13 @@ class _LoansScreenState extends State<LoansScreen>
           ),
           filled: true,
           fillColor: Colors.white,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 16,
+            vertical: 16,
+          ),
         ),
         items: items.map((String item) {
-          return DropdownMenuItem<String>(
-            value: item,
-            child: Text(item),
-          );
+          return DropdownMenuItem<String>(value: item, child: Text(item));
         }).toList(),
         onChanged: onChanged,
       ),
@@ -754,11 +940,13 @@ class _LoansScreenState extends State<LoansScreen>
   void _showMakeLoanOfferDialog(Map<String, dynamic> loanRequest) {
     final formKey = GlobalKey<FormState>();
     final controllers = {
-      'amount': TextEditingController(text: loanRequest['loanAmount']?.toString()),
+      'amount': TextEditingController(
+        text: loanRequest['loanAmount']?.toString(),
+      ),
       'interestRate': TextEditingController(),
       'terms': TextEditingController(),
     };
-    
+
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -834,7 +1022,7 @@ class _LoansScreenState extends State<LoansScreen>
   ) async {
     try {
       final loanRequestId = 'loan_${DateTime.now().millisecondsSinceEpoch}';
-      
+
       await _firestore.collection('loan_requests').doc(loanRequestId).set({
         'id': loanRequestId,
         'farmerId': appState.currentUser!.id,
@@ -854,7 +1042,7 @@ class _LoansScreenState extends State<LoansScreen>
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Loan request submitted successfully!')),
       );
@@ -872,7 +1060,7 @@ class _LoansScreenState extends State<LoansScreen>
     try {
       final appState = Provider.of<AppState>(context, listen: false);
       final offerId = 'offer_${DateTime.now().millisecondsSinceEpoch}';
-      
+
       await _firestore.collection('loan_offers').doc(offerId).set({
         'id': offerId,
         'loanRequestId': loanRequest['id'],
@@ -889,7 +1077,7 @@ class _LoansScreenState extends State<LoansScreen>
         'createdAt': FieldValue.serverTimestamp(),
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Loan offer submitted successfully!')),
       );
@@ -906,14 +1094,14 @@ class _LoansScreenState extends State<LoansScreen>
         'status': status,
         'updatedAt': FieldValue.serverTimestamp(),
       });
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Offer $status successfully!')),
-      );
+
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Offer $status successfully!')));
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error updating offer: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error updating offer: $e')));
     }
   }
 }

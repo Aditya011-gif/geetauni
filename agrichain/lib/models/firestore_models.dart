@@ -3,16 +3,40 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 // Enums
 enum CropCategory { grains, vegetables, fruits, pulses, spices, oilseeds }
-enum CropType { wheat, rice, potato, tomato, onion, maize, mango, apple, banana, cotton, sugarcane, soybean }
+
+enum CropType {
+  wheat,
+  rice,
+  potato,
+  tomato,
+  onion,
+  maize,
+  mango,
+  apple,
+  banana,
+  cotton,
+  sugarcane,
+  soybean,
+}
+
 enum CertificationType { organic, fssai, agmark, iso, gmp, haccp }
+
 enum QualityGrade { premium, grade1, grade2, standard }
+
 enum UserType { farmer, buyer, lender, admin }
+
 enum RatingType { quality, delivery, communication, overall, buyer, seller }
+
 enum LoanStatus { pending, active, completed, defaulted, overdue }
+
 enum LoanRequestStatus { open, closed, funded }
+
 enum LoanOfferStatus { pending, accepted, rejected, expired }
+
 enum OrderStatus { pending, confirmed, shipped, delivered, cancelled }
+
 enum BiddingType { fixedPrice, auction }
+
 enum AuctionStatus { active, ended, cancelled }
 
 // Firestore-compatible User model
@@ -29,6 +53,7 @@ class FirestoreUser {
   final DateTime? updatedAt;
   final bool isActive;
   final Map<String, dynamic> metadata;
+  final String? signatureUrl;
 
   FirestoreUser({
     required this.id,
@@ -43,6 +68,7 @@ class FirestoreUser {
     this.updatedAt,
     this.isActive = true,
     this.metadata = const {},
+    this.signatureUrl,
   });
 
   Map<String, dynamic> toFirestore() {
@@ -59,6 +85,7 @@ class FirestoreUser {
       'updatedAt': updatedAt != null ? Timestamp.fromDate(updatedAt!) : null,
       'isActive': isActive,
       'metadata': metadata,
+      'signatureUrl': signatureUrl,
     };
   }
 
@@ -77,9 +104,12 @@ class FirestoreUser {
       walletAddress: data['walletAddress'],
       walletBalance: (data['walletBalance'] ?? 0.0).toDouble(),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
       isActive: data['isActive'] ?? true,
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
+      signatureUrl: data['signatureUrl'],
     );
   }
 
@@ -96,6 +126,7 @@ class FirestoreUser {
     DateTime? updatedAt,
     bool? isActive,
     Map<String, dynamic>? metadata,
+    String? signatureUrl,
   }) {
     return FirestoreUser(
       id: id ?? this.id,
@@ -110,6 +141,7 @@ class FirestoreUser {
       updatedAt: updatedAt ?? this.updatedAt,
       isActive: isActive ?? this.isActive,
       metadata: metadata ?? this.metadata,
+      signatureUrl: signatureUrl ?? this.signatureUrl,
     );
   }
 }
@@ -184,7 +216,9 @@ class FirestoreCrop {
       'nftTokenId': nftTokenId,
       'biddingType': biddingType.name,
       'auctionId': auctionId,
-      'auctionEndTime': auctionEndTime != null ? Timestamp.fromDate(auctionEndTime!) : null,
+      'auctionEndTime': auctionEndTime != null
+          ? Timestamp.fromDate(auctionEndTime!)
+          : null,
       'startingBid': startingBid,
       'reservePrice': reservePrice,
       'cropType': cropType?.name,
@@ -217,30 +251,40 @@ class FirestoreCrop {
         orElse: () => BiddingType.fixedPrice,
       ),
       auctionId: data['auctionId'],
-      auctionEndTime: data['auctionEndTime'] != null ? (data['auctionEndTime'] as Timestamp).toDate() : null,
+      auctionEndTime: data['auctionEndTime'] != null
+          ? (data['auctionEndTime'] as Timestamp).toDate()
+          : null,
       startingBid: data['startingBid']?.toDouble(),
       reservePrice: data['reservePrice']?.toDouble(),
-      cropType: data['cropType'] != null ? CropType.values.firstWhere(
-        (e) => e.name == data['cropType'],
-        orElse: () => CropType.wheat,
-      ) : null,
-      category: data['category'] != null ? CropCategory.values.firstWhere(
-        (e) => e.name == data['category'],
-        orElse: () => CropCategory.grains,
-      ) : null,
-      certifications: List<Map<String, dynamic>>.from(data['certifications'] ?? []),
+      cropType: data['cropType'] != null
+          ? CropType.values.firstWhere(
+              (e) => e.name == data['cropType'],
+              orElse: () => CropType.wheat,
+            )
+          : null,
+      category: data['category'] != null
+          ? CropCategory.values.firstWhere(
+              (e) => e.name == data['category'],
+              orElse: () => CropCategory.grains,
+            )
+          : null,
+      certifications: List<Map<String, dynamic>>.from(
+        data['certifications'] ?? [],
+      ),
       qualityGrade: QualityGrade.values.firstWhere(
         (e) => e.name == data['qualityGrade'],
         orElse: () => QualityGrade.standard,
       ),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
       isActive: data['isActive'] ?? true,
     );
   }
 
   bool get isAuction => biddingType == BiddingType.auction;
-  
+
   bool get isAuctionActive {
     if (!isAuction || auctionEndTime == null) return false;
     return DateTime.now().isBefore(auctionEndTime!);
@@ -312,9 +356,13 @@ class FirestoreLoan {
         orElse: () => LoanStatus.pending,
       ),
       startDate: (data['startDate'] as Timestamp).toDate(),
-      endDate: data['endDate'] != null ? (data['endDate'] as Timestamp).toDate() : null,
+      endDate: data['endDate'] != null
+          ? (data['endDate'] as Timestamp).toDate()
+          : null,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
     );
   }
@@ -322,8 +370,9 @@ class FirestoreLoan {
   double calculateMonthlyPayment() {
     final monthlyRate = interestRate / 100 / 12;
     final numPayments = duration;
-    return amount * (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) / 
-           (Math.pow(1 + monthlyRate, numPayments) - 1);
+    return amount *
+        (monthlyRate * Math.pow(1 + monthlyRate, numPayments)) /
+        (Math.pow(1 + monthlyRate, numPayments) - 1);
   }
 }
 
@@ -379,8 +428,12 @@ class FirestoreOrder {
       'totalAmount': totalAmount,
       'status': status.name,
       'orderDate': Timestamp.fromDate(orderDate),
-      'expectedDelivery': expectedDelivery != null ? Timestamp.fromDate(expectedDelivery!) : null,
-      'actualDelivery': actualDelivery != null ? Timestamp.fromDate(actualDelivery!) : null,
+      'expectedDelivery': expectedDelivery != null
+          ? Timestamp.fromDate(expectedDelivery!)
+          : null,
+      'actualDelivery': actualDelivery != null
+          ? Timestamp.fromDate(actualDelivery!)
+          : null,
       'buyerRated': buyerRated,
       'sellerRated': sellerRated,
       'createdAt': Timestamp.fromDate(createdAt),
@@ -405,12 +458,18 @@ class FirestoreOrder {
         orElse: () => OrderStatus.pending,
       ),
       orderDate: (data['orderDate'] as Timestamp).toDate(),
-      expectedDelivery: data['expectedDelivery'] != null ? (data['expectedDelivery'] as Timestamp).toDate() : null,
-      actualDelivery: data['actualDelivery'] != null ? (data['actualDelivery'] as Timestamp).toDate() : null,
+      expectedDelivery: data['expectedDelivery'] != null
+          ? (data['expectedDelivery'] as Timestamp).toDate()
+          : null,
+      actualDelivery: data['actualDelivery'] != null
+          ? (data['actualDelivery'] as Timestamp).toDate()
+          : null,
       buyerRated: data['buyerRated'] ?? false,
       sellerRated: data['sellerRated'] ?? false,
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
     );
   }
@@ -483,17 +542,22 @@ class FirestoreAuction {
       ),
       bids: List<Map<String, dynamic>>.from(data['bids'] ?? []),
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
     );
   }
 
   double get currentHighestBid {
     if (bids.isEmpty) return startingPrice;
-    return bids.map((bid) => (bid['amount'] as num).toDouble()).reduce((a, b) => a > b ? a : b);
+    return bids
+        .map((bid) => (bid['amount'] as num).toDouble())
+        .reduce((a, b) => a > b ? a : b);
   }
 
-  bool get isActive => status == AuctionStatus.active && DateTime.now().isBefore(endTime);
+  bool get isActive =>
+      status == AuctionStatus.active && DateTime.now().isBefore(endTime);
 }
 
 // Security Log model for Firestore
@@ -651,13 +715,17 @@ class Rating {
       toUserName: data['toUserName'] ?? '',
       rating: (data['rating'] ?? 0.0).toDouble(),
       review: data['review'],
-      ratingType: data['ratingType'] != null ? RatingType.values.firstWhere(
-        (e) => e.name == data['ratingType'],
-        orElse: () => RatingType.overall,
-      ) : null,
+      ratingType: data['ratingType'] != null
+          ? RatingType.values.firstWhere(
+              (e) => e.name == data['ratingType'],
+              orElse: () => RatingType.overall,
+            )
+          : null,
       orderId: data['orderId'],
       createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: data['updatedAt'] != null ? (data['updatedAt'] as Timestamp).toDate() : null,
+      updatedAt: data['updatedAt'] != null
+          ? (data['updatedAt'] as Timestamp).toDate()
+          : null,
       metadata: Map<String, dynamic>.from(data['metadata'] ?? {}),
     );
   }
@@ -696,8 +764,12 @@ class UserRatingStats {
       'userId': userId,
       'averageRating': averageRating,
       'totalRatings': totalRatings,
-      'ratingsByType': ratingsByType.map((key, value) => MapEntry(key.name, value)),
-      'countsByType': countsByType.map((key, value) => MapEntry(key.name, value)),
+      'ratingsByType': ratingsByType.map(
+        (key, value) => MapEntry(key.name, value),
+      ),
+      'countsByType': countsByType.map(
+        (key, value) => MapEntry(key.name, value),
+      ),
       'fiveStarCount': fiveStarCount,
       'fourStarCount': fourStarCount,
       'threeStarCount': threeStarCount,
