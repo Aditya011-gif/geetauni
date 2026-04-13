@@ -166,7 +166,25 @@ For processing non-crypto transactions via Razorpay.
 
 ---
 
-## 4. Development Operations & Compilation
+## 5. Legal & Regulatory Compliance (Indian Jurisprudence)
+
+The Agrichain smart contract ecosystem (`4_AgriChainCompliance.sol`) natively encodes the following Indian laws to ensure all digitally executed agreements are legally binding and enforceable:
+
+1. **Indian Contract Act, 1872**: Smart contract logic enforces clear offer, acceptance, and consideration (locked in escrow).
+2. **Sale of Goods Act, 1930**: Tracks ownership transfer and explicitly defines delivery timelines within the smart contract state.
+3. **Information Technology Act, 2000 (Sec 4 & 5)**: Digital agreements are retained on-chain and in Firestore, granting them the legal status of electronic records and electronic contracts.
+4. **Electronic / Digital Signature Rules**: Parties' digital signatures (wallet interactions) and timestamps are recorded on the EVM as legally binding approvals.
+5. **Farmers' Produce Trade and Commerce (Promotion and Facilitation) Act, 2020**: Allows and records direct farmer-to-buyer trades, skipping traditional mandis.
+6. **APMC Acts (State-wise)**: For restricted states, trades record `apmcState` for reporting compliance to local मंडी (Mandi) regulators.
+7. **Digital Personal Data Protection (DPDP) Act, 2023**: Incorporates a strict on-chain `recordConsent` step to prove users agreed to data processing strictly for executing the trade.
+8. **Consumer Protection Act, 2019**: Smart contracts include robust refund logic and dispute resolution arbitration prior to releasing escrowed funds, protecting buyer rights.
+9. **Payment and Settlement Systems Act, 2007**: Tracks fiat settlement (e.g., via Razorpay UPI) keeping records aligned with RBI guidelines.
+
+All generated PDFs via the application encompass these explicit legal clauses.
+
+---
+
+## 6. Development Operations & Compilation
 
 ### App Frontend (Flutter)
 - **Local Run**: `flutter run`

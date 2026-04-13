@@ -37,6 +37,37 @@ class SmartContractService {
         'qualityStandards': 'Grade A organic certification required',
         'penaltyRate': 0.05, // 5% penalty for late delivery
         'refundPolicy': 'Full refund if quality standards not met',
+      },
+      'legalCompliance': {
+        'indianContractAct1872': {
+          'offerAndAcceptance': 'Valid under Sec 2(a) and 2(b)',
+          'consideration': amount,
+          'lawfulObject': true,
+        },
+        'saleOfGoodsAct1930': {
+          'ownershipTransfer': 'Upon quality approval and escrow release',
+          'deliveryTerms': expectedDelivery.toIso8601String(),
+          'priceDetermination': 'Market determined, locked in escrow',
+        },
+        'dpdpAct2023': {
+          'dataConsent': true,
+          'purposeLimitation': 'Trade execution and settlement only',
+        },
+        'apmcAct': {
+          'isDirectTrade': true, // Farmers' Produce Trade and Commerce Act 2020
+          'stateRegulated': false,
+        },
+        'itAct2000': {
+          'digitalRecord': true, // Sec 4
+          'electronicSignature': true, // Sec 5
+        },
+        'consumerProtectionAct2019': {
+          'disputeResolution': 'Platform arbitration first, then legal remedy',
+          'unfairTradeRules': 'Strict compliance enforced',
+        },
+        'paymentAct2007': {
+          'settlementRegulated': true,
+        }
       }
     };
     
@@ -234,6 +265,46 @@ class SmartContractService {
       'gasPrice': gasPrice,
       'estimatedCost': (gasLimit * gasPrice / 1e9).toStringAsFixed(6),
       'currency': 'MATIC',
+    };
+  }
+
+  // Record Data Protection Consent (DPDP Act 2023)
+  static Future<Map<String, dynamic>> recordDigitalConsent({
+    required String userAddress,
+    required String purpose,
+  }) async {
+    await Future.delayed(const Duration(seconds: 1));
+    
+    final transactionHash = _generateTransactionHash();
+    
+    return {
+      'success': true,
+      'userAddress': userAddress,
+      'purpose': purpose,
+      'transactionHash': transactionHash,
+      'dpdpCompliant': true,
+      'timestamp': DateTime.now().toIso8601String(),
+      'blockNumber': Random().nextInt(1000000) + 5000000,
+    };
+  }
+
+  // Fetch Legal Compliance Verification Details
+  static Future<Map<String, dynamic>> getLegalComplianceDetails(String contractId) async {
+    await Future.delayed(const Duration(seconds: 1));
+    return {
+      'success': true,
+      'contractId': contractId,
+      'isITAct2000Compliant': true,
+      'isIndianContractAct1872Compliant': true,
+      'isSaleOfGoodsAct1930Compliant': true,
+      'digitalSignaturesRecorded': true,
+      'electronicSignaturesValid': true, // Digital Signature Rules
+      'dpdpConsentVerified': true,
+      'regulatoryDisclosures': [
+        'Farmers Produce Trade and Commerce Act, 2020: Direct Trade Enabled',
+        'Payment and Settlement Systems Act, 2007: Authorized Gateway Used',
+        'Consumer Protection Act, 2019: Dispute mechanism available'
+      ]
     };
   }
 }

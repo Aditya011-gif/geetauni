@@ -21,7 +21,12 @@ class ContractPdfService {
   static Future<Uint8List?> _fetchImage(String? url) async {
     if (url == null || url.isEmpty) return null;
     try {
-      final response = await http.get(Uri.parse(url));
+      final response = await http.get(Uri.parse(url)).timeout(
+        const Duration(seconds: 5),
+        onTimeout: () {
+          throw Exception('Image fetch timeout');
+        },
+      );
       if (response.statusCode == 200) {
         return response.bodyBytes;
       }
@@ -122,8 +127,13 @@ class ContractPdfService {
             _buildPurchaseTermsAndConditions(regularFont, boldFont, italicFont),
             pw.SizedBox(height: 30),
 
+            // Legal Framework & Compliance (Indian Laws)
+            _buildSectionTitle('4. LEGAL FRAMEWORK & COMPLIANCE', boldFont),
+            _buildIndianLegalComplianceSection(regularFont, boldFont, italicFont),
+            pw.SizedBox(height: 30),
+
             // Signatures
-            _buildSectionTitle('4. SIGNATURES', boldFont),
+            _buildSectionTitle('5. SIGNATURES', boldFont),
             _buildPurchaseSignatureSection(
               farmerName,
               buyerName,
@@ -268,6 +278,46 @@ class ContractPdfService {
     );
   }
 
+  // Indian Legal Compliance Section
+  static pw.Widget _buildIndianLegalComplianceSection(
+      pw.Font regularFont, pw.Font boldFont, pw.Font italicFont) {
+    return pw.Column(
+      crossAxisAlignment: pw.CrossAxisAlignment.start,
+      children: [
+        _buildTermClause(
+          'A. Contract Act & Sale of Goods:',
+          'This agreement constitutes a valid electronic contract under the Indian Contract Act, 1872, and the Sale of Goods Act, 1930, determining price, delivery, and ownership transfer.',
+          regularFont,
+          boldFont,
+        ),
+        _buildTermClause(
+          'B. Digital Signatures (IT Act 2000):',
+          'Electronic signatures affixed hereto are legally recognized under Sections 4 & 5 of the Information Technology Act, 2000, and the IT (Electronic Service Delivery) Rules.',
+          regularFont,
+          boldFont,
+        ),
+        _buildTermClause(
+          'C. DPDP Act 2023 Consent:',
+          'The parties explicitly consent to the processing of their digital identities and personal data strictly for the execution of this platform trade, per the Digital Personal Data Protection Act, 2023.',
+          regularFont,
+          boldFont,
+        ),
+        _buildTermClause(
+          'D. Agricultural & Consumer Laws:',
+          'This trade complies with the Farmers\' Produce Trade and Commerce (Promotion and Facilitation) Act, 2020. Disputes are subject to platform arbitration and the Consumer Protection Act, 2019.',
+          regularFont,
+          boldFont,
+        ),
+        _buildTermClause(
+          'E. Payments & Settlements:',
+          'Consideration settlement occurs via RBI-regulated channels as mandated by the Payment and Settlement Systems Act, 2007.',
+          regularFont,
+          boldFont,
+        ),
+      ],
+    );
+  }
+
   // Signature section for the purchase agreement
   static pw.Widget _buildPurchaseSignatureSection(
     String farmerName,
@@ -406,8 +456,13 @@ class ContractPdfService {
             _buildLoanTermsAndConditions(regularFont, boldFont, italicFont),
             pw.SizedBox(height: 30),
 
+            // Legal Framework & Compliance (Indian Laws)
+            _buildSectionTitle('4. LEGAL FRAMEWORK & COMPLIANCE', boldFont),
+            _buildIndianLegalComplianceSection(regularFont, boldFont, italicFont),
+            pw.SizedBox(height: 30),
+
             // Signatures
-            _buildSectionTitle('4. SIGNATURES', boldFont),
+            _buildSectionTitle('5. SIGNATURES', boldFont),
             _buildLoanSignatureSection(
               borrowerName,
               lenderName,
